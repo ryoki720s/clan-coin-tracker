@@ -96,18 +96,26 @@
   .daily-status { text-align: center; font-size: 12px; color: var(--sub); margin-top: 10px; }
   .daily-status .done { color: var(--ok); font-weight: 600; }
 
-  /* クランカード */
+  /* クランカード(--accent で各クランの個性を表現) */
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
   .clan-card {
+    position: relative; overflow: hidden;
     background: var(--card); border: 1px solid var(--border);
+    background: linear-gradient(165deg, color-mix(in srgb, var(--accent, var(--gold)) 9%, var(--card)), var(--card) 60%);
     border-radius: 18px; padding: 16px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.3);
   }
-  .clan-card.ready { border-color: rgba(230,194,110,0.35); }
+  .clan-card::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent, var(--gold)), transparent);
+    opacity: 0.75;
+  }
+  .clan-card.ready { border-color: rgba(230,194,110,0.35); border-color: color-mix(in srgb, var(--accent, var(--gold)) 45%, transparent); }
   .clan-card .head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
   .avatar {
     width: 42px; height: 42px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
     border: 2px solid rgba(230,194,110,0.45);
+    border-color: color-mix(in srgb, var(--accent, var(--gold)) 65%, transparent);
     box-shadow: 0 2px 8px rgba(0,0,0,0.4);
     display: flex; align-items: center; justify-content: center;
     background: var(--card2);
@@ -380,6 +388,20 @@ document.querySelectorAll("nav button").forEach(btn => {
 });
 
 /* ---------- ダッシュボード ---------- */
+// 各クランのテーマカラー(アイコンの雰囲気に合わせた配色)
+const CLAN_ACCENTS = {
+  c1: "#aab6e8",  // ASA: 月夜のシルバーラベンダー
+  c2: "#e07856",  // AHEYON: 赤髪のウォームコッパー
+  c3: "#6fd8c0",  // CHIQUITA: ミントの瞳とデザート
+  c4: "#e5484d",  // RUKA: 深紅
+  c5: "#b79ce8",  // PHARITA: 藤色の羽根
+  c6: "#f2a65a",  // RORA: 琥珀色の瞳
+  c7: "#4fc3dd",  // RAMI: ターコイズのカクテル
+  c8: "#6b8fd4",  // FELIX: ブルーの髪
+  c9: "#4fae8e",  // BANGCHAN: 深緑と王冠
+  c10: "#f28a9e", // JENNIE: ピンク
+};
+
 function renderDashboard() {
   const items = [...state.items].sort((a, b) => a.cost - b.cost);
   const daily = state.settings.dailyAmount;
@@ -403,10 +425,11 @@ function renderDashboard() {
       const cnt = exchangedCount(c.id, it.id);
       const badge = cnt ? `<span class="xcnt">×${cnt}</span>` : "";
       if (can) {
+        const n = Math.floor(bal / it.cost);
         return `
           <button class="xbtn ready" onclick="exchange('${c.id}','${it.id}')">
             <span class="xname">${esc(it.name)}</span>
-            <span class="xsub">タップで交換 −${it.cost.toLocaleString()}</span>
+            <span class="xsub">${n}枚交換可 ・ タップで −${it.cost.toLocaleString()}</span>
             ${badge}
           </button>`;
       }
@@ -417,8 +440,9 @@ function renderDashboard() {
           ${badge}
         </button>`;
     }).join("");
+    const accent = CLAN_ACCENTS[c.id] ? `style="--accent:${CLAN_ACCENTS[c.id]}"` : "";
     return `
-      <div class="clan-card ${anyReady ? "ready" : ""}">
+      <div class="clan-card ${anyReady ? "ready" : ""}" ${accent}>
         <div class="head">
           <span class="avatar" data-initial="${esc(c.name.charAt(0))}"><img src="icons/${c.id}.jpg" alt="" onerror="this.parentElement.classList.add('noimg')"></span>
           <span class="name">${esc(c.name)}</span><span class="coins">${bal.toLocaleString()}</span>

@@ -1,4 +1,4 @@
-const CACHE = "clan-coin-v5";
+const CACHE = "clan-coin-v6";
 const ASSETS = [
   "./",
   "./index.html",
@@ -10,7 +10,12 @@ const ASSETS = [
   "./icons/c2.jpg",
   "./icons/c3.jpg",
   "./icons/c4.jpg",
-  "./icons/c5.jpg"
+  "./icons/c5.jpg",
+  "./icons/c6.jpg",
+  "./icons/c7.jpg",
+  "./icons/c8.jpg",
+  "./icons/c9.jpg",
+  "./icons/c10.jpg"
 ];
 
 self.addEventListener("install", (e) => {
