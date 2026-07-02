@@ -43,12 +43,11 @@
     display: flex; align-items: baseline; gap: 10px;
   }
   header .brand {
-    font-size: 19px; font-weight: 700; letter-spacing: 0.06em;
+    font-size: 20px; font-weight: 700; letter-spacing: 0.08em;
     background: var(--gold-grad);
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent;
   }
-  header .sub { margin-left: auto; font-size: 11px; color: var(--sub); letter-spacing: 0.14em; }
 
   main {
     max-width: 1080px; margin: 0 auto;
@@ -73,13 +72,15 @@
     font-size: 10px; color: var(--sub); padding: 4px 0; border-radius: 10px;
   }
   nav button .ico { font-size: 21px; line-height: 1; filter: grayscale(1) opacity(0.65); }
-  nav button.active { color: var(--gold); }
+  nav button.active { color: var(--gold); background: rgba(230,194,110,0.09); }
   nav button.active .ico { filter: none; }
 
   /* ヒーロー(デイリーボタン) */
   .hero {
-    background: linear-gradient(160deg, var(--card2), var(--card));
-    border: 1px solid var(--border); border-radius: 20px;
+    border: 1px solid transparent; border-radius: 20px;
+    background:
+      linear-gradient(160deg, var(--card2), var(--card)) padding-box,
+      linear-gradient(150deg, rgba(230,194,110,0.55), rgba(255,255,255,0.07) 45%, rgba(230,194,110,0.25)) border-box;
     padding: 18px; margin-bottom: 16px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.35);
   }
@@ -106,7 +107,7 @@
     /* クランカラーのグラデーション枠 + 内側のほのかな色付き */
     border: 1px solid transparent;
     background:
-      linear-gradient(165deg, color-mix(in srgb, var(--accent, var(--gold)) 11%, var(--card)), var(--card) 58%) padding-box,
+      linear-gradient(180deg, color-mix(in srgb, var(--accent, var(--gold)) 6%, var(--card)), var(--card) 42%) padding-box,
       linear-gradient(150deg,
         color-mix(in srgb, var(--accent, var(--gold)) 60%, transparent),
         rgba(255,255,255,0.07) 42%,
@@ -118,9 +119,10 @@
     background: linear-gradient(90deg, transparent, var(--accent, var(--gold)), transparent);
     opacity: 0.9;
   }
+  /* 淡い光はカード上端の帯だけに(名前・アイコンに被らない) */
   .clan-card::after {
-    content: ""; position: absolute; top: -36px; left: -36px; width: 170px; height: 170px;
-    background: radial-gradient(circle, color-mix(in srgb, var(--accent, var(--gold)) 20%, transparent), transparent 68%);
+    content: ""; position: absolute; top: -46px; left: 8%; right: 8%; height: 64px;
+    background: radial-gradient(ellipse at center, color-mix(in srgb, var(--accent, var(--gold)) 30%, transparent), transparent 72%);
     pointer-events: none;
   }
   .clan-card.ready {
@@ -140,10 +142,13 @@
       color-mix(in srgb, var(--accent, var(--gold)) 45%, #000) 72%,
       var(--accent, var(--gold)));
     box-shadow:
-      0 0 14px color-mix(in srgb, var(--accent, var(--gold)) 40%, transparent),
+      0 0 10px color-mix(in srgb, var(--accent, var(--gold)) 30%, transparent),
       0 3px 10px rgba(0,0,0,0.5);
   }
-  .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+  .avatar img {
+    width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;
+    border: 2px solid rgba(13,15,20,0.9); /* リングと画像の間に暗い縁で分離して見やすく */
+  }
   .avatar.noimg img { display: none; }
   .avatar.noimg::after {
     content: attr(data-initial);
@@ -152,7 +157,10 @@
     background: var(--card2);
     font-size: 18px; font-weight: 700; color: var(--accent, var(--gold));
   }
-  .clan-card .name { font-weight: 700; font-size: 17px; letter-spacing: 0.06em; text-shadow: 0 2px 12px rgba(0,0,0,0.6); }
+  .clan-card .name {
+    font-weight: 700; font-size: 17px; letter-spacing: 0.06em; color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 2px 14px rgba(0,0,0,0.7);
+  }
   .clan-card .coins { margin-left: auto; font-size: 21px; font-weight: 700; color: var(--gold); }
   .clan-card .coins::before { content: "🪙 "; font-size: 14px; }
 
@@ -189,10 +197,21 @@
 
   /* フォーム共通 */
   .panel {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 18px; padding: 20px; margin-bottom: 14px;
+    border: 1px solid transparent; border-radius: 18px;
+    background:
+      linear-gradient(170deg, var(--card2), var(--card) 65%) padding-box,
+      linear-gradient(160deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03) 50%, rgba(230,194,110,0.14)) border-box;
+    padding: 20px; margin-bottom: 14px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.28);
   }
-  .panel h2 { font-size: 15px; margin-bottom: 14px; letter-spacing: 0.04em; }
+  .panel h2 {
+    font-size: 14px; margin-bottom: 16px; letter-spacing: 0.05em;
+    display: flex; align-items: center; gap: 9px;
+  }
+  .panel h2::before {
+    content: ""; width: 3px; height: 15px; border-radius: 2px;
+    background: var(--gold-grad); flex-shrink: 0;
+  }
   label { font-size: 12px; color: var(--sub); display: block; margin-bottom: 5px; }
   input[type="date"], input[type="number"], input[type="text"], select {
     padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
@@ -213,21 +232,41 @@
   .btn.small { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
   .clan-checks { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
   .clan-checks label {
-    display: flex; align-items: center; gap: 5px;
+    display: flex; align-items: center; gap: 7px;
     background: var(--card2); border: 1px solid var(--border);
-    border-radius: 10px; padding: 8px 12px;
+    border-radius: 999px; padding: 7px 14px 7px 8px;
     font-size: 13px; color: var(--sub); cursor: pointer; margin: 0;
+    transition: border-color 0.15s, color 0.15s;
   }
-  .clan-checks label.checked { border-color: rgba(230,194,110,0.5); color: var(--gold); }
+  .clan-checks label.checked { border-color: rgba(230,194,110,0.55); color: var(--text); background: rgba(230,194,110,0.07); }
+  .clan-checks input { display: none; }
+  .mini {
+    width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex-shrink: 0;
+    border: 1px solid var(--border); opacity: 0.55; filter: grayscale(0.6);
+    transition: opacity 0.15s, filter 0.15s;
+  }
+  label.checked .mini { opacity: 1; filter: none; border-color: rgba(230,194,110,0.55); }
+  .setting-list .mini { opacity: 1; filter: none; }
   .check-actions { display: flex; gap: 12px; margin-bottom: 10px; }
   .link-btn { background: none; border: none; color: var(--gold); font-size: 12px; cursor: pointer; text-decoration: underline; }
 
   /* 履歴 */
   .log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .log-table th, .log-table td { padding: 10px 8px; border-bottom: 1px solid var(--border); text-align: left; }
-  .log-table th { color: var(--sub); font-size: 11px; letter-spacing: 0.08em; font-weight: 600; }
+  .log-table th, .log-table td { padding: 11px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+  .log-table tr:last-child td { border-bottom: none; }
+  .log-table th { color: var(--sub); font-size: 11px; letter-spacing: 0.1em; font-weight: 600; }
+  .log-table td:first-child { color: var(--sub); font-size: 12px; white-space: nowrap; }
   .delta-plus { color: var(--ok); font-weight: 700; }
   .delta-minus { color: var(--danger); font-weight: 700; }
+  .tag {
+    display: inline-block; font-size: 10.5px; font-weight: 600;
+    padding: 2px 9px; border-radius: 999px; border: 1px solid; white-space: nowrap;
+  }
+  .tag.t-task { color: var(--gold); border-color: rgba(230,194,110,0.4); }
+  .tag.t-exchange { color: var(--ok); border-color: var(--ok-border); }
+  .tag.t-adjust { color: #8ab4f8; border-color: rgba(138,180,248,0.4); }
+  .log-table .note { color: var(--sub); font-size: 11px; margin-top: 2px; }
+  .log-table .btn.small { white-space: nowrap; }
 
   /* 設定 */
   .setting-list { display: flex; flex-direction: column; gap: 8px; }
@@ -250,7 +289,6 @@
 
 <header>
   <span class="brand">🪙 クランコイン</span>
-  <span class="sub" id="headerSub"></span>
 </header>
 
 <main>
@@ -300,7 +338,7 @@
         <div><label>クランで絞り込み</label><select id="histFilter" onchange="renderHistory()"><option value="">すべて</option></select></div>
       </div>
       <table class="log-table">
-        <thead><tr><th>日付</th><th>クラン</th><th>種別</th><th>増減</th><th>メモ</th><th></th></tr></thead>
+        <thead><tr><th>日付</th><th>クラン / メモ</th><th>種別</th><th>増減</th><th></th></tr></thead>
         <tbody id="histBody"></tbody>
       </table>
     </div>
@@ -438,7 +476,6 @@ function renderDashboard() {
   const daily = state.settings.dailyAmount;
 
   // ヒーロー
-  document.getElementById("headerSub").textContent = state.clans.length + " CLANS";
   document.getElementById("dailyBtn").innerHTML =
     `☀️ 今日のデイリー +${daily}<small>全クラン一括</small>`;
   const todayDone = state.logs.some(l => l.date === today() && l.type === "task" && l.note === "デイリータスク");
@@ -504,7 +541,7 @@ function exchange(clanId, itemId) {
 function renderRecordForm() {
   const wrap = document.getElementById("recClanChecks");
   wrap.innerHTML = state.clans.map(c => `
-    <label class="checked"><input type="checkbox" value="${c.id}" checked onchange="this.parentElement.classList.toggle('checked', this.checked)"> ${esc(c.name)}</label>
+    <label class="checked"><input type="checkbox" value="${c.id}" checked onchange="this.parentElement.classList.toggle('checked', this.checked)"><img class="mini" src="icons/${c.id}.jpg" alt="" onerror="this.style.display='none'">${esc(c.name)}</label>
   `).join("");
 
   const sel = document.getElementById("adjClan");
@@ -553,13 +590,15 @@ function renderHistory() {
   body.innerHTML = logs.length ? logs.map(l => `
     <tr>
       <td>${l.date.slice(5).replace("-", "/")}</td>
-      <td>${esc(clanName(l.clanId))}</td>
-      <td>${TYPE_LABEL[l.type] || l.type}</td>
+      <td>
+        <div style="font-weight:600">${esc(clanName(l.clanId))}</div>
+        <div class="note">${esc(l.note || "")}</div>
+      </td>
+      <td><span class="tag t-${l.type}">${TYPE_LABEL[l.type] || l.type}</span></td>
       <td class="${l.delta >= 0 ? "delta-plus" : "delta-minus"}">${l.delta >= 0 ? "+" : ""}${l.delta.toLocaleString()}</td>
-      <td class="muted">${esc(l.note || "")}</td>
-      <td><button class="btn red small" onclick="deleteLog(${l.idx})">取消</button></td>
+      <td style="text-align:right"><button class="btn red small" onclick="deleteLog(${l.idx})">取消</button></td>
     </tr>`).join("")
-    : `<tr><td colspan="6" style="text-align:center;color:var(--sub);padding:24px">記録がありません</td></tr>`;
+    : `<tr><td colspan="5" style="text-align:center;color:var(--sub);padding:24px">記録がありません</td></tr>`;
 }
 
 function renderHistFilter() {
@@ -585,9 +624,9 @@ function renderSettings() {
   document.getElementById("recAmount").value = document.getElementById("recAmount").value || state.settings.dailyAmount;
 
   const cs = document.getElementById("clanSettings");
-  cs.innerHTML = state.clans.map((c, i) => `
+  cs.innerHTML = state.clans.map(c => `
     <div class="row">
-      <span class="muted" style="width:24px">${i + 1}.</span>
+      <img class="mini" src="icons/${c.id}.jpg" alt="" onerror="this.style.visibility='hidden'">
       <input type="text" value="${esc(c.name)}" onchange="renameClan('${c.id}', this.value)">
     </div>`).join("");
 

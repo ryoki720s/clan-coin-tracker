@@ -1,4 +1,4 @@
-const CACHE = "clan-coin-v7";
+const CACHE = "clan-coin-v8";
 const ASSETS = [
   "./",
   "./index.html",
