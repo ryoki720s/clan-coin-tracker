@@ -214,6 +214,14 @@
       </div>
     </div>
     <div class="panel">
+      <h2>データの引き継ぎ(スマホ ⇄ PC)</h2>
+      <p class="muted" style="margin-bottom:10px">「共有リンクを作成」で今のデータ入りのリンクができます。LINEやメールでもう一方の端末に送って開くと、データがそのまま反映されます。</p>
+      <div class="form-row" style="margin-bottom:0">
+        <button class="btn" onclick="shareLink()">🔗 共有リンクを作成</button>
+        <button class="btn gray" onclick="importFromText()">📥 リンク/JSONを貼り付けて読み込み</button>
+      </div>
+    </div>
+    <div class="panel">
       <h2>データ管理</h2>
       <div class="form-row" style="margin-bottom:0">
         <button class="btn gray" onclick="exportData()">📤 バックアップ(JSON出力)</button>
@@ -483,6 +491,69 @@ function importData(ev) {
   reader.readAsText(file);
   ev.target.value = "";
 }
+/* ---------- 共有リンク(端末間のデータ引き継ぎ) ---------- */
+function encodeState() {
+  const bytes = new TextEncoder().encode(JSON.stringify(state));
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 8192) {
+    bin += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  }
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function decodeShared(text) {
+  const m = String(text).match(/#d=([A-Za-z0-9_-]+)/);
+  let b64 = m ? m[1] : null;
+  if (!b64) return null;
+  b64 = b64.replace(/-/g, "+").replace(/_/g, "/");
+  while (b64.length % 4) b64 += "=";
+  const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+function applyImported(data) {
+  if (!data || !data.clans || !data.items || !data.logs) throw new Error("形式が違います");
+  state = data;
+  save(); renderAll();
+  toast("データを読み込みました");
+}
+function shareLink() {
+  const url = location.origin + location.pathname + "#d=" + encodeState();
+  if (url.length > 30000) {
+    alert("記録が多くリンクにできるサイズを超えました。「バックアップ(JSON出力)」をご利用ください。");
+    return;
+  }
+  const isMobile = /iPhone|iPad|Android/.test(navigator.userAgent);
+  if (isMobile && navigator.share) {
+    navigator.share({ title: "クランコインデータ", url }).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(url)
+      .then(() => toast("リンクをコピーしました。もう一方の端末に送って開いてください"))
+      .catch(() => prompt("このリンクをコピーして、もう一方の端末で開いてください", url));
+  } else {
+    prompt("このリンクをコピーして、もう一方の端末で開いてください", url);
+  }
+}
+function importFromText() {
+  const txt = prompt("共有リンク、またはバックアップJSONを貼り付けてください");
+  if (!txt) return;
+  try {
+    const trimmed = txt.trim();
+    const data = trimmed.startsWith("{") ? JSON.parse(trimmed) : decodeShared(trimmed);
+    if (!data) throw new Error("リンクの形式が違います");
+    if (!confirm("貼り付けたデータを読み込みますか?\n(この端末の現在のデータは上書きされます)")) return;
+    applyImported(data);
+  } catch (e) { alert("読み込みに失敗しました: " + e.message); }
+}
+function importFromHash() {
+  if (!location.hash.startsWith("#d=")) return;
+  try {
+    const data = decodeShared(location.hash);
+    if (data && confirm("共有リンクのデータを読み込みますか?\n(この端末の現在のデータは上書きされます)")) {
+      applyImported(data);
+    }
+  } catch (e) { alert("共有リンクの読み込みに失敗しました"); }
+  history.replaceState(null, "", location.pathname);
+}
+
 function resetData() {
   if (!confirm("すべてのデータを初期化します。よろしいですか?")) return;
   if (!confirm("本当に初期化しますか?この操作は取り消せません。")) return;
@@ -506,6 +577,7 @@ function renderAll() {
 
 document.getElementById("recDate").value = today();
 renderAll();
+importFromHash();
 
 if ("serviceWorker" in navigator && location.protocol === "https:") {
   navigator.serviceWorker.register("sw.js");
