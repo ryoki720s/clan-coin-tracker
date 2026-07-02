@@ -76,22 +76,13 @@
   nav button.active { color: var(--gold); }
   nav button.active .ico { filter: none; }
 
-  /* ヒーロー(合計 + デイリーボタン) */
+  /* ヒーロー(デイリーボタン) */
   .hero {
     background: linear-gradient(160deg, var(--card2), var(--card));
     border: 1px solid var(--border); border-radius: 20px;
-    padding: 22px 20px 18px; margin-bottom: 16px;
+    padding: 18px; margin-bottom: 16px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.35);
   }
-  .hero .label { font-size: 11px; color: var(--sub); letter-spacing: 0.18em; margin-bottom: 4px; }
-  .hero .total {
-    font-size: 40px; font-weight: 700; letter-spacing: 0.02em;
-    background: var(--gold-grad);
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 14px;
-  }
-  .hero .total::after { content: " 🪙"; -webkit-text-fill-color: initial; font-size: 24px; }
   .btn-daily {
     width: 100%; border: none; cursor: pointer;
     background: var(--gold-grad); color: #201804;
@@ -105,27 +96,6 @@
   .daily-status { text-align: center; font-size: 12px; color: var(--sub); margin-top: 10px; }
   .daily-status .done { color: var(--ok); font-weight: 600; }
 
-  /* ランキング(概要) */
-  .panel-title { font-size: 12px; color: var(--sub); letter-spacing: 0.16em; margin: 20px 4px 10px; }
-  .rank-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
-  .rank-row {
-    display: flex; align-items: center; gap: 12px;
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 14px; padding: 12px 14px;
-  }
-  .rank-row.ready { border-color: rgba(230,194,110,0.35); }
-  .rank-row .pos { width: 22px; text-align: center; font-size: 13px; color: var(--sub); font-weight: 700; }
-  .rank-row .pos.top { color: var(--gold); }
-  .rank-row .rname { font-weight: 700; font-size: 15px; letter-spacing: 0.03em; min-width: 0; }
-  .rank-row .rinfo { margin-left: auto; text-align: right; display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
-  .rank-row .rcoins { font-size: 17px; font-weight: 700; color: var(--gold); white-space: nowrap; }
-  .rank-row .rnext { font-size: 11px; color: var(--sub); white-space: nowrap; }
-  .chip {
-    display: inline-block; border-radius: 999px; padding: 2px 10px;
-    font-size: 11px; font-weight: 700;
-    background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok-border);
-  }
-
   /* クランカード */
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
   .clan-card {
@@ -138,22 +108,32 @@
   .clan-card .name { font-weight: 700; font-size: 16px; letter-spacing: 0.04em; }
   .clan-card .coins { margin-left: auto; font-size: 21px; font-weight: 700; color: var(--gold); }
   .clan-card .coins::before { content: "🪙 "; font-size: 14px; }
-  .item-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 0; border-top: 1px solid var(--border); font-size: 13px;
+
+  /* 交換ボタン(常時表示・進捗を背景で表現) */
+  .xrow { display: flex; gap: 8px; }
+  .xbtn {
+    flex: 1; position: relative; border-radius: 12px; padding: 10px 6px 9px;
+    border: 1px solid var(--border); cursor: default;
+    background: linear-gradient(90deg, rgba(230,194,110,0.16) var(--p, 0%), rgba(255,255,255,0.03) var(--p, 0%));
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    font-family: inherit;
   }
-  .item-row .iname { flex: 0 0 auto; min-width: 96px; }
-  .exchanged-count { color: var(--sub); font-size: 10px; }
-  .bar { flex: 1; height: 7px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
-  .bar > div { height: 100%; background: var(--gold-grad); border-radius: 4px; transition: width 0.4s; }
-  .bar.full > div { background: linear-gradient(135deg, #5eead4, #3ddc97); }
-  .item-row .meta { color: var(--sub); font-size: 11px; min-width: 88px; text-align: right; line-height: 1.4; white-space: nowrap; }
-  .item-row .meta b { color: var(--text); font-size: 12px; font-weight: 600; }
-  .btn-exchange {
-    border: none; cursor: pointer; font-weight: 700; font-size: 12px;
-    background: linear-gradient(135deg, #5eead4, #3ddc97); color: #06281c;
-    border-radius: 9px; padding: 6px 12px;
+  .xbtn .xname { font-weight: 700; font-size: 13px; color: var(--text); }
+  .xbtn .xsub { font-size: 10.5px; color: var(--sub); white-space: nowrap; }
+  .xbtn .xcnt {
+    position: absolute; top: -7px; right: -4px;
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 999px; padding: 1px 7px; font-size: 10px; color: var(--gold);
   }
+  .xbtn.ready {
+    border: none; cursor: pointer;
+    background: linear-gradient(135deg, #5eead4, #3ddc97);
+    box-shadow: 0 4px 14px rgba(61,220,151,0.28);
+    transition: transform 0.1s;
+  }
+  .xbtn.ready:active { transform: scale(0.97); }
+  .xbtn.ready .xname { color: #06281c; }
+  .xbtn.ready .xsub { color: rgba(6,40,28,0.8); font-weight: 700; }
 
   /* フォーム共通 */
   .panel {
@@ -225,16 +205,10 @@
   <!-- ダッシュボード -->
   <section id="tab-dashboard" class="tab active">
     <div class="hero">
-      <div class="label">TOTAL COINS</div>
-      <div class="total" id="heroTotal">0</div>
       <button class="btn-daily" onclick="recordDaily()" id="dailyBtn">☀️ 今日のデイリー +21<small>全クラン一括</small></button>
       <div class="daily-status" id="dailyStatus"></div>
     </div>
 
-    <div class="panel-title">RANKING ─ 交換可能状況</div>
-    <div class="rank-list" id="rankList"></div>
-
-    <div class="panel-title">CLANS ─ アイテム別進捗</div>
     <div class="grid" id="clanGrid"></div>
   </section>
 
@@ -398,8 +372,6 @@ function renderDashboard() {
   const daily = state.settings.dailyAmount;
 
   // ヒーロー
-  const total = state.clans.reduce((s, c) => s + balance(c.id), 0);
-  document.getElementById("heroTotal").textContent = total.toLocaleString();
   document.getElementById("headerSub").textContent = state.clans.length + " CLANS";
   document.getElementById("dailyBtn").innerHTML =
     `☀️ 今日のデイリー +${daily}<small>全クラン一括</small>`;
@@ -408,60 +380,34 @@ function renderDashboard() {
     ? `<span class="done">✔ 今日のデイリーは記録済みです</span>`
     : `今日のデイリーはまだ記録されていません`;
 
-  // ランキング
-  const ranked = state.clans
-    .map(c => ({ ...c, bal: balance(c.id) }))
-    .sort((a, b) => b.bal - a.bal);
-  document.getElementById("rankList").innerHTML = ranked.map((c, i) => {
-    const ex = items.filter(it => c.bal >= it.cost);
-    const next = items.find(it => c.bal < it.cost);
-    let info;
-    if (ex.length) {
-      info = ex.map(it => `<span class="chip">✔ ${esc(it.name)}</span>`).join(" ");
-    } else {
-      info = "";
-    }
-    const nextTxt = next
-      ? `<span class="rnext">${esc(next.name)}まで あと約${daysUntil(c.bal, next.cost)}日</span>`
-      : (items.length ? `<span class="rnext">全アイテム交換可能</span>` : "");
-    return `
-      <div class="rank-row ${ex.length ? "ready" : ""}">
-        <span class="pos ${i < 3 ? "top" : ""}">${i + 1}</span>
-        <span class="rname">${esc(c.name)}</span>
-        <div class="rinfo">
-          <span class="rcoins">🪙 ${c.bal.toLocaleString()}</span>
-          ${info || nextTxt}
-        </div>
-      </div>`;
-  }).join("");
-
-  // クランカード
+  // クランカード(交換ボタン常時表示)
   document.getElementById("clanGrid").innerHTML = state.clans.map(c => {
     const bal = balance(c.id);
     const anyReady = items.some(it => bal >= it.cost);
-    const rows = items.map(it => {
-      const pct = Math.min(100, Math.round(bal / it.cost * 100));
+    const btns = items.map(it => {
       const can = bal >= it.cost;
+      const pct = Math.min(100, Math.round(bal / it.cost * 100));
       const cnt = exchangedCount(c.id, it.id);
-      const d = daysUntil(bal, it.cost);
-      const action = can
-        ? `<button class="btn-exchange" onclick="exchange('${c.id}','${it.id}')">交換</button>`
-        : "";
-      const meta = can
-        ? `<span class="meta"><b>交換可能</b></span>`
-        : `<span class="meta"><b>${bal.toLocaleString()}</b>/${it.cost.toLocaleString()}<br>あと約${d}日</span>`;
+      const badge = cnt ? `<span class="xcnt">×${cnt}</span>` : "";
+      if (can) {
+        return `
+          <button class="xbtn ready" onclick="exchange('${c.id}','${it.id}')">
+            <span class="xname">${esc(it.name)}</span>
+            <span class="xsub">タップで交換 −${it.cost.toLocaleString()}</span>
+            ${badge}
+          </button>`;
+      }
       return `
-        <div class="item-row">
-          <span class="iname">${esc(it.name)}${cnt ? `<br><span class="exchanged-count">×${cnt} 交換済</span>` : ""}</span>
-          <div class="bar ${can ? "full" : ""}"><div style="width:${pct}%"></div></div>
-          ${meta}
-          ${action}
-        </div>`;
+        <button class="xbtn" disabled style="--p:${pct}%">
+          <span class="xname">${esc(it.name)}</span>
+          <span class="xsub">${bal.toLocaleString()}/${it.cost.toLocaleString()} ・ あと約${daysUntil(bal, it.cost)}日</span>
+          ${badge}
+        </button>`;
     }).join("");
     return `
       <div class="clan-card ${anyReady ? "ready" : ""}">
         <div class="head"><span class="name">${esc(c.name)}</span><span class="coins">${bal.toLocaleString()}</span></div>
-        ${rows}
+        <div class="xrow">${btns}</div>
       </div>`;
   }).join("");
 }
@@ -478,10 +424,9 @@ function recordDaily() {
 function exchange(clanId, itemId) {
   const it = state.items.find(i => i.id === itemId);
   if (!it) return;
-  if (!confirm(`${clanName(clanId)} のコイン ${it.cost.toLocaleString()} を消費して「${it.name}」と交換しますか?`)) return;
   state.logs.push({ date: today(), clanId, delta: -it.cost, type: "exchange", itemId, note: it.name + " と交換" });
   save(); renderAll();
-  toast(`${clanName(clanId)}: ${it.name} と交換しました`);
+  toast(`${clanName(clanId)}: ${it.name} と交換しました(取り消しは履歴から)`);
 }
 
 /* ---------- 記録 ---------- */
