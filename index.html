@@ -6,116 +6,196 @@
 <title>クランコイン管理ツール</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="theme-color" content="#4f46e5">
+<meta name="theme-color" content="#0d0f14">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="クランコイン">
 <style>
   :root {
-    --bg: #f4f6fa;
-    --card: #ffffff;
-    --text: #1f2937;
-    --sub: #6b7280;
-    --accent: #4f46e5;
-    --accent-light: #eef2ff;
-    --ok: #059669;
-    --ok-light: #d1fae5;
-    --warn: #d97706;
-    --danger: #dc2626;
-    --border: #e5e7eb;
-    --coin: #f59e0b;
+    color-scheme: dark;
+    --bg: #0d0f14;
+    --card: #161a22;
+    --card2: #1c212c;
+    --border: rgba(255,255,255,0.07);
+    --text: #eceef2;
+    --sub: #9aa1b2;
+    --gold: #e6c26e;
+    --gold-deep: #c9a24b;
+    --gold-grad: linear-gradient(135deg, #f0d48a, #c9a24b);
+    --ok: #3ddc97;
+    --ok-bg: rgba(61,220,151,0.12);
+    --ok-border: rgba(61,220,151,0.28);
+    --danger: #ff7676;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body {
     font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", sans-serif;
-    background: var(--bg); color: var(--text); padding-bottom: 60px;
+    background:
+      radial-gradient(900px 420px at 50% -8%, rgba(230,194,110,0.09), transparent 65%),
+      var(--bg);
+    color: var(--text);
+    min-height: 100vh;
   }
+
+  /* ヘッダー(iPhoneのセンサーバーを避けるセーフエリア対応) */
   header {
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
-    color: #fff; padding: 18px 24px;
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: calc(16px + env(safe-area-inset-top)) 20px 14px;
+    display: flex; align-items: baseline; gap: 10px;
   }
-  header h1 { font-size: 20px; }
-  header .total { margin-left: auto; font-size: 14px; opacity: 0.9; }
+  header .brand {
+    font-size: 19px; font-weight: 700; letter-spacing: 0.06em;
+    background: var(--gold-grad);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header .sub { margin-left: auto; font-size: 11px; color: var(--sub); letter-spacing: 0.14em; }
+
+  main {
+    max-width: 1080px; margin: 0 auto;
+    padding: 4px 16px calc(96px + env(safe-area-inset-bottom));
+  }
+  .tab { display: none; }
+  .tab.active { display: block; animation: fade 0.25s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; } }
+
+  /* 下部タブナビ */
   nav {
-    display: flex; gap: 4px; background: var(--card);
-    padding: 8px 16px; border-bottom: 1px solid var(--border);
-    position: sticky; top: 0; z-index: 10; overflow-x: auto;
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+    display: flex; justify-content: space-around;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    background: rgba(13,15,20,0.82);
+    -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
   }
   nav button {
-    border: none; background: none; padding: 8px 16px; font-size: 14px;
-    cursor: pointer; border-radius: 8px; color: var(--sub); white-space: nowrap;
+    flex: 1; max-width: 140px; border: none; background: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    font-size: 10px; color: var(--sub); padding: 4px 0; border-radius: 10px;
   }
-  nav button.active { background: var(--accent-light); color: var(--accent); font-weight: bold; }
-  main { max-width: 1100px; margin: 0 auto; padding: 20px 16px; }
-  .tab { display: none; }
-  .tab.active { display: block; }
+  nav button .ico { font-size: 21px; line-height: 1; filter: grayscale(1) opacity(0.65); }
+  nav button.active { color: var(--gold); }
+  nav button.active .ico { filter: none; }
 
-  /* ダッシュボード */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+  /* ヒーロー(合計 + デイリーボタン) */
+  .hero {
+    background: linear-gradient(160deg, var(--card2), var(--card));
+    border: 1px solid var(--border); border-radius: 20px;
+    padding: 22px 20px 18px; margin-bottom: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
+  .hero .label { font-size: 11px; color: var(--sub); letter-spacing: 0.18em; margin-bottom: 4px; }
+  .hero .total {
+    font-size: 40px; font-weight: 700; letter-spacing: 0.02em;
+    background: var(--gold-grad);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 14px;
+  }
+  .hero .total::after { content: " 🪙"; -webkit-text-fill-color: initial; font-size: 24px; }
+  .btn-daily {
+    width: 100%; border: none; cursor: pointer;
+    background: var(--gold-grad); color: #201804;
+    font-size: 16px; font-weight: 700; letter-spacing: 0.02em;
+    padding: 15px; border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(201,162,75,0.3);
+    transition: transform 0.1s;
+  }
+  .btn-daily:active { transform: scale(0.98); }
+  .btn-daily small { font-weight: 600; opacity: 0.75; margin-left: 6px; }
+  .daily-status { text-align: center; font-size: 12px; color: var(--sub); margin-top: 10px; }
+  .daily-status .done { color: var(--ok); font-weight: 600; }
+
+  /* ランキング(概要) */
+  .panel-title { font-size: 12px; color: var(--sub); letter-spacing: 0.16em; margin: 20px 4px 10px; }
+  .rank-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+  .rank-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 12px 14px;
+  }
+  .rank-row.ready { border-color: rgba(230,194,110,0.35); }
+  .rank-row .pos { width: 22px; text-align: center; font-size: 13px; color: var(--sub); font-weight: 700; }
+  .rank-row .pos.top { color: var(--gold); }
+  .rank-row .rname { font-weight: 700; font-size: 15px; letter-spacing: 0.03em; min-width: 0; }
+  .rank-row .rinfo { margin-left: auto; text-align: right; display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
+  .rank-row .rcoins { font-size: 17px; font-weight: 700; color: var(--gold); white-space: nowrap; }
+  .rank-row .rnext { font-size: 11px; color: var(--sub); white-space: nowrap; }
+  .chip {
+    display: inline-block; border-radius: 999px; padding: 2px 10px;
+    font-size: 11px; font-weight: 700;
+    background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok-border);
+  }
+
+  /* クランカード */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
   .clan-card {
-    background: var(--card); border-radius: 12px; padding: 16px;
-    border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 18px; padding: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
   }
-  .clan-card .head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
-  .clan-card .name { font-weight: bold; font-size: 16px; }
-  .clan-card .coins { margin-left: auto; font-size: 22px; font-weight: bold; color: var(--coin); }
-  .clan-card .coins::before { content: "🪙 "; font-size: 16px; }
-  .item-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px dashed var(--border); font-size: 13px; }
-  .item-row .iname { flex: 0 0 auto; min-width: 90px; }
-  .bar { flex: 1; height: 8px; background: #f0f1f5; border-radius: 4px; overflow: hidden; }
-  .bar > div { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.3s; }
-  .bar.full > div { background: var(--ok); }
-  .item-row .cost { color: var(--sub); font-size: 12px; min-width: 80px; text-align: right; }
+  .clan-card.ready { border-color: rgba(230,194,110,0.35); }
+  .clan-card .head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+  .clan-card .name { font-weight: 700; font-size: 16px; letter-spacing: 0.04em; }
+  .clan-card .coins { margin-left: auto; font-size: 21px; font-weight: 700; color: var(--gold); }
+  .clan-card .coins::before { content: "🪙 "; font-size: 14px; }
+  .item-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 0; border-top: 1px solid var(--border); font-size: 13px;
+  }
+  .item-row .iname { flex: 0 0 auto; min-width: 96px; }
+  .exchanged-count { color: var(--sub); font-size: 10px; }
+  .bar { flex: 1; height: 7px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+  .bar > div { height: 100%; background: var(--gold-grad); border-radius: 4px; transition: width 0.4s; }
+  .bar.full > div { background: linear-gradient(135deg, #5eead4, #3ddc97); }
+  .item-row .meta { color: var(--sub); font-size: 11px; min-width: 88px; text-align: right; line-height: 1.4; white-space: nowrap; }
+  .item-row .meta b { color: var(--text); font-size: 12px; font-weight: 600; }
   .btn-exchange {
-    border: none; background: var(--ok); color: #fff; border-radius: 6px;
-    padding: 4px 10px; font-size: 12px; cursor: pointer; font-weight: bold;
+    border: none; cursor: pointer; font-weight: 700; font-size: 12px;
+    background: linear-gradient(135deg, #5eead4, #3ddc97); color: #06281c;
+    border-radius: 9px; padding: 6px 12px;
   }
-  .btn-exchange:hover { opacity: 0.85; }
-  .badge-wait { color: var(--sub); font-size: 12px; padding: 4px 6px; }
-  .exchanged-count { color: var(--sub); font-size: 11px; }
-
-  /* 概要テーブル */
-  .summary-table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; margin-bottom: 20px; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-  .summary-table th, .summary-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
-  .summary-table th { background: #f9fafb; color: var(--sub); font-size: 12px; }
-  .summary-table td.num { text-align: right; font-weight: bold; color: var(--coin); }
-  .chip { display: inline-block; background: var(--ok-light); color: var(--ok); border-radius: 999px; padding: 2px 10px; font-size: 12px; margin: 2px; font-weight: bold; }
-  .chip.none { background: #f3f4f6; color: var(--sub); font-weight: normal; }
 
   /* フォーム共通 */
-  .panel { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); margin-bottom: 16px; }
-  .panel h2 { font-size: 16px; margin-bottom: 14px; }
-  label { font-size: 13px; color: var(--sub); display: block; margin-bottom: 4px; }
+  .panel {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 18px; padding: 20px; margin-bottom: 14px;
+  }
+  .panel h2 { font-size: 15px; margin-bottom: 14px; letter-spacing: 0.04em; }
+  label { font-size: 12px; color: var(--sub); display: block; margin-bottom: 5px; }
   input[type="date"], input[type="number"], input[type="text"], select {
-    padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: #fff;
+    padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
+    font-size: 14px; background: var(--card2); color: var(--text); outline: none;
   }
+  input:focus, select:focus { border-color: rgba(230,194,110,0.5); }
   input[type="number"] { width: 110px; }
-  .form-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
+  .form-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
   .btn {
-    border: none; background: var(--accent); color: #fff; border-radius: 8px;
-    padding: 9px 18px; font-size: 14px; cursor: pointer; font-weight: bold;
+    border: none; cursor: pointer; font-weight: 700; font-size: 14px;
+    background: var(--gold-grad); color: #201804;
+    border-radius: 11px; padding: 11px 20px;
+    box-shadow: 0 4px 14px rgba(201,162,75,0.22);
   }
-  .btn:hover { opacity: 0.85; }
-  .btn.gray { background: #6b7280; }
-  .btn.red { background: var(--danger); }
-  .btn.small { padding: 5px 10px; font-size: 12px; }
+  .btn:active { transform: scale(0.98); }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); box-shadow: none; }
+  .btn.red { background: rgba(255,118,118,0.12); color: var(--danger); border: 1px solid rgba(255,118,118,0.3); box-shadow: none; }
+  .btn.small { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
   .clan-checks { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
   .clan-checks label {
-    display: flex; align-items: center; gap: 4px; background: #f9fafb;
-    border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px;
-    font-size: 13px; color: var(--text); cursor: pointer; margin: 0;
+    display: flex; align-items: center; gap: 5px;
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 8px 12px;
+    font-size: 13px; color: var(--sub); cursor: pointer; margin: 0;
   }
-  .clan-checks label.checked { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
-  .check-actions { display: flex; gap: 8px; margin-bottom: 10px; }
-  .link-btn { background: none; border: none; color: var(--accent); font-size: 12px; cursor: pointer; text-decoration: underline; }
+  .clan-checks label.checked { border-color: rgba(230,194,110,0.5); color: var(--gold); }
+  .check-actions { display: flex; gap: 12px; margin-bottom: 10px; }
+  .link-btn { background: none; border: none; color: var(--gold); font-size: 12px; cursor: pointer; text-decoration: underline; }
 
   /* 履歴 */
-  .log-table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 13px; border-radius: 12px; overflow: hidden; }
-  .log-table th, .log-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; }
-  .log-table th { background: #f9fafb; color: var(--sub); font-size: 12px; }
-  .delta-plus { color: var(--ok); font-weight: bold; }
-  .delta-minus { color: var(--danger); font-weight: bold; }
+  .log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .log-table th, .log-table td { padding: 10px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+  .log-table th { color: var(--sub); font-size: 11px; letter-spacing: 0.08em; font-weight: 600; }
+  .delta-plus { color: var(--ok); font-weight: 700; }
+  .delta-minus { color: var(--danger); font-weight: 700; }
 
   /* 設定 */
   .setting-list { display: flex; flex-direction: column; gap: 8px; }
@@ -123,9 +203,12 @@
   .setting-list input[type="text"] { flex: 1; max-width: 260px; }
 
   .toast {
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    background: #1f2937; color: #fff; padding: 10px 20px; border-radius: 8px;
-    font-size: 14px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100;
+    position: fixed; bottom: calc(84px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+    background: #23283340; border: 1px solid rgba(230,194,110,0.35);
+    background: rgba(28,33,44,0.95); color: var(--text);
+    padding: 11px 20px; border-radius: 12px; font-size: 13px;
+    opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100;
+    max-width: 90vw; text-align: center;
   }
   .toast.show { opacity: 1; }
   .muted { color: var(--sub); font-size: 12px; }
@@ -134,37 +217,35 @@
 <body>
 
 <header>
-  <h1>🪙 クランコイン管理ツール</h1>
-  <span class="total" id="headerInfo"></span>
+  <span class="brand">🪙 クランコイン</span>
+  <span class="sub" id="headerSub"></span>
 </header>
-
-<nav>
-  <button data-tab="dashboard" class="active">📊 ダッシュボード</button>
-  <button data-tab="record">✏️ コイン記録</button>
-  <button data-tab="history">📜 履歴</button>
-  <button data-tab="settings">⚙️ 設定</button>
-</nav>
 
 <main>
   <!-- ダッシュボード -->
   <section id="tab-dashboard" class="tab active">
-    <table class="summary-table">
-      <thead>
-        <tr><th>クラン</th><th style="text-align:right">所持コイン</th><th>交換可能なアイテム</th></tr>
-      </thead>
-      <tbody id="summaryBody"></tbody>
-    </table>
+    <div class="hero">
+      <div class="label">TOTAL COINS</div>
+      <div class="total" id="heroTotal">0</div>
+      <button class="btn-daily" onclick="recordDaily()" id="dailyBtn">☀️ 今日のデイリー +21<small>全クラン一括</small></button>
+      <div class="daily-status" id="dailyStatus"></div>
+    </div>
+
+    <div class="panel-title">RANKING ─ 交換可能状況</div>
+    <div class="rank-list" id="rankList"></div>
+
+    <div class="panel-title">CLANS ─ アイテム別進捗</div>
     <div class="grid" id="clanGrid"></div>
   </section>
 
   <!-- 記録 -->
   <section id="tab-record" class="tab">
     <div class="panel">
-      <h2>デイリータスクのコインを記録</h2>
+      <h2>コインを記録(個別・金額指定)</h2>
       <div class="form-row">
         <div><label>日付</label><input type="date" id="recDate"></div>
-        <div><label>獲得コイン数</label><input type="number" id="recAmount" value="10" min="1"></div>
-        <div><label>メモ(任意)</label><input type="text" id="recNote" placeholder="デイリータスク" style="width:200px"></div>
+        <div><label>獲得コイン数</label><input type="number" id="recAmount" min="1"></div>
+        <div><label>メモ(任意)</label><input type="text" id="recNote" placeholder="デイリータスク" style="width:180px"></div>
       </div>
       <label>対象クラン</label>
       <div class="check-actions">
@@ -173,15 +254,15 @@
       </div>
       <div class="clan-checks" id="recClanChecks"></div>
       <button class="btn" onclick="addRecord()">✔ 記録する</button>
-      <p class="muted" style="margin-top:10px">※ 同じタスクを全クランで行う場合は「すべて選択」のまま記録すると一括で加算されます。</p>
+      <p class="muted" style="margin-top:10px">※ 全クラン一律のデイリーはホームの「今日のデイリー」ボタンがワンタップで便利です。こちらは日付をさかのぼる時や一部クランだけの記録用。</p>
     </div>
     <div class="panel">
       <h2>個別調整(手動でコインを増減)</h2>
       <div class="form-row">
         <div><label>クラン</label><select id="adjClan"></select></div>
         <div><label>増減(マイナス可)</label><input type="number" id="adjAmount" value="0"></div>
-        <div><label>メモ</label><input type="text" id="adjNote" placeholder="調整理由" style="width:200px"></div>
-        <button class="btn gray" onclick="addAdjust()">調整を記録</button>
+        <div><label>メモ</label><input type="text" id="adjNote" placeholder="調整理由" style="width:180px"></div>
+        <button class="btn ghost" onclick="addAdjust()">調整を記録</button>
       </div>
     </div>
   </section>
@@ -189,25 +270,32 @@
   <!-- 履歴 -->
   <section id="tab-history" class="tab">
     <div class="panel">
-      <div class="form-row" style="margin-bottom:0">
+      <div class="form-row" style="margin-bottom:12px">
         <div><label>クランで絞り込み</label><select id="histFilter" onchange="renderHistory()"><option value="">すべて</option></select></div>
       </div>
+      <table class="log-table">
+        <thead><tr><th>日付</th><th>クラン</th><th>種別</th><th>増減</th><th>メモ</th><th></th></tr></thead>
+        <tbody id="histBody"></tbody>
+      </table>
     </div>
-    <table class="log-table">
-      <thead><tr><th>日付</th><th>クラン</th><th>種別</th><th>増減</th><th>メモ</th><th></th></tr></thead>
-      <tbody id="histBody"></tbody>
-    </table>
   </section>
 
   <!-- 設定 -->
   <section id="tab-settings" class="tab">
+    <div class="panel">
+      <h2>デイリー獲得コイン数</h2>
+      <div class="form-row" style="margin-bottom:0">
+        <input type="number" id="setDaily" min="1" onchange="updateDaily(this.value)">
+        <span class="muted">コイン/日 ─ ホームのワンタップボタンと「あと約◯日」の計算に使われます</span>
+      </div>
+    </div>
     <div class="panel">
       <h2>クラン名の編集</h2>
       <div class="setting-list" id="clanSettings"></div>
     </div>
     <div class="panel">
       <h2>交換アイテムの設定</h2>
-      <p class="muted" style="margin-bottom:10px">アイテム名と必要コイン数を設定します。所持コインが必要数以上になると交換可能と表示されます。</p>
+      <p class="muted" style="margin-bottom:10px">アイテム名と必要コイン数。所持コインが必要数以上になると交換可能と表示されます。</p>
       <div class="setting-list" id="itemSettings"></div>
       <div style="margin-top:12px">
         <button class="btn small" onclick="addItem()">＋ アイテムを追加</button>
@@ -218,20 +306,27 @@
       <p class="muted" style="margin-bottom:10px">「共有リンクを作成」で今のデータ入りのリンクができます。LINEやメールでもう一方の端末に送って開くと、データがそのまま反映されます。</p>
       <div class="form-row" style="margin-bottom:0">
         <button class="btn" onclick="shareLink()">🔗 共有リンクを作成</button>
-        <button class="btn gray" onclick="importFromText()">📥 リンク/JSONを貼り付けて読み込み</button>
+        <button class="btn ghost" onclick="importFromText()">📥 リンク/JSONを貼り付けて読み込み</button>
       </div>
     </div>
     <div class="panel">
       <h2>データ管理</h2>
       <div class="form-row" style="margin-bottom:0">
-        <button class="btn gray" onclick="exportData()">📤 バックアップ(JSON出力)</button>
-        <button class="btn gray" onclick="document.getElementById('importFile').click()">📥 読み込み(JSON)</button>
+        <button class="btn ghost" onclick="exportData()">📤 バックアップ(JSON出力)</button>
+        <button class="btn ghost" onclick="document.getElementById('importFile').click()">📥 読み込み(JSON)</button>
         <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
         <button class="btn red" onclick="resetData()">🗑 全データ初期化</button>
       </div>
     </div>
   </section>
 </main>
+
+<nav>
+  <button data-tab="dashboard" class="active"><span class="ico">🏠</span>ホーム</button>
+  <button data-tab="record"><span class="ico">✏️</span>記録</button>
+  <button data-tab="history"><span class="ico">📜</span>履歴</button>
+  <button data-tab="settings"><span class="ico">⚙️</span>設定</button>
+</nav>
 
 <div class="toast" id="toast"></div>
 
@@ -244,10 +339,14 @@ function defaultState() {
     items: [
       { id: "i1", name: "アイテムA", cost: 100 },
       { id: "i2", name: "アイテムB", cost: 300 },
-      { id: "i3", name: "アイテムC", cost: 500 },
     ],
+    settings: { dailyAmount: 21 },
     logs: [] // { date, clanId, delta, type: task|exchange|adjust, note }
   };
+}
+function normalize(s) {
+  s.settings = Object.assign({ dailyAmount: 21 }, s.settings || {});
+  return s;
 }
 
 let state = load();
@@ -255,7 +354,7 @@ let state = load();
 function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) return normalize(JSON.parse(raw));
   } catch (e) { console.error(e); }
   return defaultState();
 }
@@ -269,13 +368,17 @@ function exchangedCount(clanId, itemId) {
 }
 function clanName(id) { const c = state.clans.find(c => c.id === id); return c ? c.name : id; }
 function today() { return new Date().toISOString().slice(0, 10); }
+function daysUntil(bal, cost) {
+  if (bal >= cost) return 0;
+  return Math.ceil((cost - bal) / Math.max(1, state.settings.dailyAmount));
+}
 
 function toast(msg) {
   const t = document.getElementById("toast");
   t.textContent = msg;
   t.classList.add("show");
   clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove("show"), 2200);
+  t._timer = setTimeout(() => t.classList.remove("show"), 2400);
 }
 
 /* ---------- タブ ---------- */
@@ -285,53 +388,91 @@ document.querySelectorAll("nav button").forEach(btn => {
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+    window.scrollTo(0, 0);
   });
 });
 
 /* ---------- ダッシュボード ---------- */
 function renderDashboard() {
   const items = [...state.items].sort((a, b) => a.cost - b.cost);
+  const daily = state.settings.dailyAmount;
 
-  // 概要テーブル
-  const sb = document.getElementById("summaryBody");
-  sb.innerHTML = state.clans.map(c => {
-    const bal = balance(c.id);
-    const ex = items.filter(it => bal >= it.cost);
-    const chips = ex.length
-      ? ex.map(it => `<span class="chip">✔ ${esc(it.name)}</span>`).join("")
-      : `<span class="chip none">なし</span>`;
-    return `<tr><td>${esc(c.name)}</td><td class="num">${bal.toLocaleString()}</td><td>${chips}</td></tr>`;
+  // ヒーロー
+  const total = state.clans.reduce((s, c) => s + balance(c.id), 0);
+  document.getElementById("heroTotal").textContent = total.toLocaleString();
+  document.getElementById("headerSub").textContent = state.clans.length + " CLANS";
+  document.getElementById("dailyBtn").innerHTML =
+    `☀️ 今日のデイリー +${daily}<small>全クラン一括</small>`;
+  const todayDone = state.logs.some(l => l.date === today() && l.type === "task" && l.note === "デイリータスク");
+  document.getElementById("dailyStatus").innerHTML = todayDone
+    ? `<span class="done">✔ 今日のデイリーは記録済みです</span>`
+    : `今日のデイリーはまだ記録されていません`;
+
+  // ランキング
+  const ranked = state.clans
+    .map(c => ({ ...c, bal: balance(c.id) }))
+    .sort((a, b) => b.bal - a.bal);
+  document.getElementById("rankList").innerHTML = ranked.map((c, i) => {
+    const ex = items.filter(it => c.bal >= it.cost);
+    const next = items.find(it => c.bal < it.cost);
+    let info;
+    if (ex.length) {
+      info = ex.map(it => `<span class="chip">✔ ${esc(it.name)}</span>`).join(" ");
+    } else {
+      info = "";
+    }
+    const nextTxt = next
+      ? `<span class="rnext">${esc(next.name)}まで あと約${daysUntil(c.bal, next.cost)}日</span>`
+      : (items.length ? `<span class="rnext">全アイテム交換可能</span>` : "");
+    return `
+      <div class="rank-row ${ex.length ? "ready" : ""}">
+        <span class="pos ${i < 3 ? "top" : ""}">${i + 1}</span>
+        <span class="rname">${esc(c.name)}</span>
+        <div class="rinfo">
+          <span class="rcoins">🪙 ${c.bal.toLocaleString()}</span>
+          ${info || nextTxt}
+        </div>
+      </div>`;
   }).join("");
 
   // クランカード
-  const grid = document.getElementById("clanGrid");
-  grid.innerHTML = state.clans.map(c => {
+  document.getElementById("clanGrid").innerHTML = state.clans.map(c => {
     const bal = balance(c.id);
+    const anyReady = items.some(it => bal >= it.cost);
     const rows = items.map(it => {
       const pct = Math.min(100, Math.round(bal / it.cost * 100));
       const can = bal >= it.cost;
       const cnt = exchangedCount(c.id, it.id);
+      const d = daysUntil(bal, it.cost);
       const action = can
         ? `<button class="btn-exchange" onclick="exchange('${c.id}','${it.id}')">交換</button>`
-        : `<span class="badge-wait">あと${(it.cost - bal).toLocaleString()}</span>`;
+        : "";
+      const meta = can
+        ? `<span class="meta"><b>交換可能</b></span>`
+        : `<span class="meta"><b>${bal.toLocaleString()}</b>/${it.cost.toLocaleString()}<br>あと約${d}日</span>`;
       return `
         <div class="item-row">
-          <span class="iname">${esc(it.name)}${cnt ? ` <span class="exchanged-count">×${cnt}交換済</span>` : ""}</span>
+          <span class="iname">${esc(it.name)}${cnt ? `<br><span class="exchanged-count">×${cnt} 交換済</span>` : ""}</span>
           <div class="bar ${can ? "full" : ""}"><div style="width:${pct}%"></div></div>
-          <span class="cost">${bal.toLocaleString()}/${it.cost.toLocaleString()}</span>
+          ${meta}
           ${action}
         </div>`;
     }).join("");
     return `
-      <div class="clan-card">
+      <div class="clan-card ${anyReady ? "ready" : ""}">
         <div class="head"><span class="name">${esc(c.name)}</span><span class="coins">${bal.toLocaleString()}</span></div>
         ${rows}
       </div>`;
   }).join("");
+}
 
-  const totalCoins = state.clans.reduce((s, c) => s + balance(c.id), 0);
-  document.getElementById("headerInfo").textContent =
-    `全${state.clans.length}クラン 合計 ${totalCoins.toLocaleString()} コイン`;
+function recordDaily() {
+  const daily = state.settings.dailyAmount;
+  const done = state.logs.some(l => l.date === today() && l.type === "task" && l.note === "デイリータスク");
+  if (done && !confirm(`今日のデイリーはすでに記録済みです。\nもう一度 全クランに +${daily} を追加しますか?`)) return;
+  state.clans.forEach(c => state.logs.push({ date: today(), clanId: c.id, delta: daily, type: "task", note: "デイリータスク" }));
+  save(); renderAll();
+  toast(`全${state.clans.length}クランに +${daily} コインを記録しました`);
 }
 
 function exchange(clanId, itemId) {
@@ -395,14 +536,14 @@ function renderHistory() {
     .sort((a, b) => b.date.localeCompare(a.date) || b.idx - a.idx);
   body.innerHTML = logs.length ? logs.map(l => `
     <tr>
-      <td>${l.date}</td>
+      <td>${l.date.slice(5).replace("-", "/")}</td>
       <td>${esc(clanName(l.clanId))}</td>
       <td>${TYPE_LABEL[l.type] || l.type}</td>
       <td class="${l.delta >= 0 ? "delta-plus" : "delta-minus"}">${l.delta >= 0 ? "+" : ""}${l.delta.toLocaleString()}</td>
-      <td>${esc(l.note || "")}</td>
+      <td class="muted">${esc(l.note || "")}</td>
       <td><button class="btn red small" onclick="deleteLog(${l.idx})">取消</button></td>
     </tr>`).join("")
-    : `<tr><td colspan="6" style="text-align:center;color:var(--sub)">記録がありません</td></tr>`;
+    : `<tr><td colspan="6" style="text-align:center;color:var(--sub);padding:24px">記録がありません</td></tr>`;
 }
 
 function renderHistFilter() {
@@ -424,6 +565,9 @@ function deleteLog(idx) {
 
 /* ---------- 設定 ---------- */
 function renderSettings() {
+  document.getElementById("setDaily").value = state.settings.dailyAmount;
+  document.getElementById("recAmount").value = document.getElementById("recAmount").value || state.settings.dailyAmount;
+
   const cs = document.getElementById("clanSettings");
   cs.innerHTML = state.clans.map((c, i) => `
     <div class="row">
@@ -441,6 +585,10 @@ function renderSettings() {
     </div>`).join("");
 }
 
+function updateDaily(val) {
+  const n = parseInt(val, 10);
+  if (n > 0) { state.settings.dailyAmount = n; save(); renderAll(); toast(`デイリー獲得を ${n} コイン/日に変更しました`); }
+}
 function renameClan(id, name) {
   const c = state.clans.find(c => c.id === id);
   if (c && name.trim()) { c.name = name.trim(); save(); renderAll(); }
@@ -465,32 +613,6 @@ function removeItem(id) {
   save(); renderAll();
 }
 
-/* ---------- データ管理 ---------- */
-function exportData() {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `clan-coins-${today()}.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-  toast("バックアップを出力しました");
-}
-function importData(ev) {
-  const file = ev.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const data = JSON.parse(reader.result);
-      if (!data.clans || !data.items || !data.logs) throw new Error("形式が違います");
-      state = data;
-      save(); renderAll();
-      toast("データを読み込みました");
-    } catch (e) { alert("読み込みに失敗しました: " + e.message); }
-  };
-  reader.readAsText(file);
-  ev.target.value = "";
-}
 /* ---------- 共有リンク(端末間のデータ引き継ぎ) ---------- */
 function encodeState() {
   const bytes = new TextEncoder().encode(JSON.stringify(state));
@@ -511,7 +633,7 @@ function decodeShared(text) {
 }
 function applyImported(data) {
   if (!data || !data.clans || !data.items || !data.logs) throw new Error("形式が違います");
-  state = data;
+  state = normalize(data);
   save(); renderAll();
   toast("データを読み込みました");
 }
@@ -554,6 +676,29 @@ function importFromHash() {
   history.replaceState(null, "", location.pathname);
 }
 
+/* ---------- データ管理 ---------- */
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `clan-coins-${today()}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast("バックアップを出力しました");
+}
+function importData(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      applyImported(data);
+    } catch (e) { alert("読み込みに失敗しました: " + e.message); }
+  };
+  reader.readAsText(file);
+  ev.target.value = "";
+}
 function resetData() {
   if (!confirm("すべてのデータを初期化します。よろしいですか?")) return;
   if (!confirm("本当に初期化しますか?この操作は取り消せません。")) return;
