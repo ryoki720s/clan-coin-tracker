@@ -39,19 +39,34 @@
 
   /* ヘッダー(iPhoneのセンサーバーを避けるセーフエリア対応) */
   header {
-    padding: calc(16px + env(safe-area-inset-top)) 20px 14px;
-    display: flex; align-items: baseline; gap: 10px;
+    padding: calc(14px + env(safe-area-inset-top)) 18px 10px;
+    display: flex; align-items: center; gap: 10px;
   }
   header .brand {
-    font-size: 20px; font-weight: 700; letter-spacing: 0.08em;
+    font-size: 19px; font-weight: 700; letter-spacing: 0.08em;
+    margin-right: auto;
     background: var(--gold-grad);
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent;
   }
+  /* デイリー一括ボタン(ヘッダー右上のピル型) */
+  .daily-pill {
+    border: none; cursor: pointer; font-family: inherit;
+    font-weight: 700; font-size: 13px; letter-spacing: 0.02em;
+    padding: 9px 15px; border-radius: 999px;
+    background: var(--gold-grad); color: #201804;
+    box-shadow: 0 4px 14px rgba(201,162,75,0.32);
+    transition: transform 0.1s;
+  }
+  .daily-pill:active { transform: scale(0.96); }
+  .daily-pill.done {
+    background: var(--ok-bg); color: var(--ok);
+    border: 1px solid var(--ok-border); box-shadow: none;
+  }
 
   main {
     max-width: 1080px; margin: 0 auto;
-    padding: 4px 16px calc(96px + env(safe-area-inset-bottom));
+    padding: 2px 14px calc(78px + env(safe-area-inset-bottom));
   }
   .tab { display: none; }
   .tab.active { display: block; animation: fade 0.25s ease; }
@@ -75,65 +90,28 @@
   nav button.active { color: var(--gold); background: rgba(230,194,110,0.09); }
   nav button.active .ico { filter: none; }
 
-  /* ヒーロー(デイリーボタン) */
-  .hero {
-    border: 1px solid transparent; border-radius: 20px;
-    background:
-      linear-gradient(160deg, var(--card2), var(--card)) padding-box,
-      linear-gradient(150deg, rgba(230,194,110,0.55), rgba(255,255,255,0.07) 45%, rgba(230,194,110,0.25)) border-box;
-    padding: 18px; margin-bottom: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-  }
-  .btn-daily {
-    width: 100%; border: none; cursor: pointer;
-    background: var(--gold-grad); color: #201804;
-    font-size: 16px; font-weight: 700; letter-spacing: 0.02em;
-    padding: 15px; border-radius: 14px;
-    box-shadow: 0 6px 18px rgba(201,162,75,0.3);
-    transition: transform 0.1s;
-  }
-  .btn-daily:active { transform: scale(0.98); }
-  .btn-daily small { font-weight: 600; opacity: 0.75; margin-left: 6px; }
-  .daily-status { text-align: center; font-size: 12px; color: var(--sub); margin-top: 10px; }
-  .daily-status .done { color: var(--ok); font-weight: 600; }
-
-  /* クランカード(--accent で各クランの個性を表現) */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+  /* クランカード(コンパクト横並び・10クランが1画面に収まる) */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 5px; }
   .clan-card {
-    position: relative; overflow: hidden;
-    border: 1px solid var(--border);
-    border-radius: 20px; padding: 17px 16px 16px;
-    background: var(--card);
-    /* クランカラーのグラデーション枠 + 内側のほのかな色付き */
+    display: flex; align-items: center; gap: 9px;
     border: 1px solid transparent;
+    border-radius: 14px; padding: 6px 9px;
     background:
-      linear-gradient(180deg, color-mix(in srgb, var(--accent, var(--gold)) 6%, var(--card)), var(--card) 42%) padding-box,
+      linear-gradient(120deg, color-mix(in srgb, var(--accent, var(--gold)) 8%, var(--card)), var(--card) 45%) padding-box,
       linear-gradient(150deg,
-        color-mix(in srgb, var(--accent, var(--gold)) 60%, transparent),
+        color-mix(in srgb, var(--accent, var(--gold)) 55%, transparent),
         rgba(255,255,255,0.07) 42%,
-        color-mix(in srgb, var(--accent, var(--gold)) 30%, transparent)) border-box;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
-  }
-  .clan-card::before {
-    content: ""; position: absolute; top: 0; left: 12%; right: 12%; height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent, var(--gold)), transparent);
-    opacity: 0.9;
-  }
-  /* 淡い光はカード上端の帯だけに(名前・アイコンに被らない) */
-  .clan-card::after {
-    content: ""; position: absolute; top: -46px; left: 8%; right: 8%; height: 64px;
-    background: radial-gradient(ellipse at center, color-mix(in srgb, var(--accent, var(--gold)) 30%, transparent), transparent 72%);
-    pointer-events: none;
+        color-mix(in srgb, var(--accent, var(--gold)) 28%, transparent)) border-box;
+    box-shadow: 0 5px 14px rgba(0,0,0,0.3);
   }
   .clan-card.ready {
     box-shadow:
-      0 12px 30px rgba(0,0,0,0.4),
-      0 0 22px color-mix(in srgb, var(--accent, var(--gold)) 18%, transparent);
+      0 5px 14px rgba(0,0,0,0.3),
+      0 0 14px color-mix(in srgb, var(--accent, var(--gold)) 16%, transparent);
   }
-  .clan-card .head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; position: relative; }
   /* 発光リング付きアバター */
   .avatar {
-    width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+    width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
     padding: 2px;
     background: conic-gradient(from 210deg,
       var(--accent, var(--gold)),
@@ -142,8 +120,8 @@
       color-mix(in srgb, var(--accent, var(--gold)) 45%, #000) 72%,
       var(--accent, var(--gold)));
     box-shadow:
-      0 0 10px color-mix(in srgb, var(--accent, var(--gold)) 30%, transparent),
-      0 3px 10px rgba(0,0,0,0.5);
+      0 0 8px color-mix(in srgb, var(--accent, var(--gold)) 30%, transparent),
+      0 2px 7px rgba(0,0,0,0.5);
   }
   .avatar img {
     width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;
@@ -155,40 +133,45 @@
     display: flex; align-items: center; justify-content: center;
     width: 100%; height: 100%; border-radius: 50%;
     background: var(--card2);
-    font-size: 18px; font-weight: 700; color: var(--accent, var(--gold));
+    font-size: 15px; font-weight: 700; color: var(--accent, var(--gold));
   }
-  .clan-card .name {
-    font-weight: 700; font-size: 17px; letter-spacing: 0.06em; color: #fff;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 2px 14px rgba(0,0,0,0.7);
+  .cinfo {
+    display: flex; flex-direction: column; gap: 0;
+    width: 92px; flex-shrink: 0; min-width: 0;
   }
-  .clan-card .coins { margin-left: auto; font-size: 21px; font-weight: 700; color: var(--gold); }
-  .clan-card .coins::before { content: "🪙 "; font-size: 14px; }
+  .cinfo .name {
+    font-weight: 700; font-size: 12.5px; letter-spacing: 0.01em; color: #fff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+  }
+  .cinfo .coins { font-size: 12.5px; font-weight: 700; color: var(--gold); white-space: nowrap; }
+  .cinfo .coins::before { content: "🪙"; font-size: 10px; margin-right: 3px; }
 
   /* 交換ボタン(常時表示・進捗を背景で表現) */
-  .xrow { display: flex; gap: 8px; }
+  .xrow { display: flex; gap: 6px; flex: 1; min-width: 0; }
   .xbtn {
-    flex: 1; position: relative; border-radius: 13px; padding: 11px 6px 10px;
-    border: 1px solid var(--border); cursor: default;
+    flex: 1; position: relative; border-radius: 10px; padding: 5px 3px 4px;
+    border: 1px solid var(--border); cursor: default; min-width: 0;
     background: linear-gradient(90deg, rgba(230,194,110,0.16) var(--p, 0%), rgba(255,255,255,0.03) var(--p, 0%));
     background: linear-gradient(90deg,
       color-mix(in srgb, var(--accent, var(--gold)) 22%, transparent) var(--p, 0%),
       rgba(255,255,255,0.03) var(--p, 0%));
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
     font-family: inherit;
   }
-  .xbtn .xname { font-weight: 700; font-size: 13px; color: var(--text); }
-  .xbtn .xsub { font-size: 10.5px; color: var(--sub); white-space: nowrap; }
+  .xbtn .xname { font-weight: 700; font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; max-width: 100%; }
+  .xbtn .xsub { font-size: 9.5px; color: var(--sub); white-space: nowrap; }
   .xbtn .xcnt {
-    position: absolute; top: -7px; right: -4px;
+    position: absolute; top: -6px; right: -3px;
     background: var(--card2); border: 1px solid var(--border);
-    border-radius: 999px; padding: 1px 7px; font-size: 10px; color: var(--gold);
+    border-radius: 999px; padding: 0 6px; font-size: 9px; color: var(--gold);
   }
   .xbtn.ready {
     border: 1px solid rgba(255,255,255,0.35); cursor: pointer;
     background: linear-gradient(150deg, #7df3d3, #3ddc97 55%, #2bbd7e);
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,0.45),
-      0 5px 16px rgba(61,220,151,0.35);
+      0 3px 10px rgba(61,220,151,0.35);
     transition: transform 0.1s;
   }
   .xbtn.ready:active { transform: scale(0.97); }
@@ -289,16 +272,12 @@
 
 <header>
   <span class="brand">🪙 クランコイン</span>
+  <button class="daily-pill" id="dailyBtn" onclick="recordDaily()">☀️ デイリー +21</button>
 </header>
 
 <main>
   <!-- ダッシュボード -->
   <section id="tab-dashboard" class="tab active">
-    <div class="hero">
-      <button class="btn-daily" onclick="recordDaily()" id="dailyBtn">☀️ 今日のデイリー +21<small>全クラン一括</small></button>
-      <div class="daily-status" id="dailyStatus"></div>
-    </div>
-
     <div class="grid" id="clanGrid"></div>
   </section>
 
@@ -475,13 +454,11 @@ function renderDashboard() {
   const items = [...state.items].sort((a, b) => a.cost - b.cost);
   const daily = state.settings.dailyAmount;
 
-  // ヒーロー
-  document.getElementById("dailyBtn").innerHTML =
-    `☀️ 今日のデイリー +${daily}<small>全クラン一括</small>`;
+  // デイリーボタン(ヘッダー)
   const todayDone = state.logs.some(l => l.date === today() && l.type === "task" && l.note === "デイリータスク");
-  document.getElementById("dailyStatus").innerHTML = todayDone
-    ? `<span class="done">✔ 今日のデイリーは記録済みです</span>`
-    : `今日のデイリーはまだ記録されていません`;
+  const dailyBtn = document.getElementById("dailyBtn");
+  dailyBtn.textContent = todayDone ? "✔ デイリー記録済" : `☀️ デイリー +${daily}`;
+  dailyBtn.classList.toggle("done", todayDone);
 
   // クランカード(交換ボタン常時表示)
   document.getElementById("clanGrid").innerHTML = state.clans.map(c => {
@@ -511,9 +488,10 @@ function renderDashboard() {
     const accent = CLAN_ACCENTS[c.id] ? `style="--accent:${CLAN_ACCENTS[c.id]}"` : "";
     return `
       <div class="clan-card ${anyReady ? "ready" : ""}" ${accent}>
-        <div class="head">
-          <span class="avatar" data-initial="${esc(c.name.charAt(0))}"><img src="icons/${c.id}.jpg" alt="" onerror="this.parentElement.classList.add('noimg')"></span>
-          <span class="name">${esc(c.name)}</span><span class="coins">${bal.toLocaleString()}</span>
+        <span class="avatar" data-initial="${esc(c.name.charAt(0))}"><img src="icons/${c.id}.jpg" alt="" onerror="this.parentElement.classList.add('noimg')"></span>
+        <div class="cinfo">
+          <span class="name">${esc(c.name)}</span>
+          <span class="coins">${bal.toLocaleString()}</span>
         </div>
         <div class="xrow">${btns}</div>
       </div>`;
