@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>クランコイン管理ツール</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#4f46e5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="クランコイン">
+<style>
+  :root {
+    --bg: #f4f6fa;
+    --card: #ffffff;
+    --text: #1f2937;
+    --sub: #6b7280;
+    --accent: #4f46e5;
+    --accent-light: #eef2ff;
+    --ok: #059669;
+    --ok-light: #d1fae5;
+    --warn: #d97706;
+    --danger: #dc2626;
+    --border: #e5e7eb;
+    --coin: #f59e0b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg); color: var(--text); padding-bottom: 60px;
+  }
+  header {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #fff; padding: 18px 24px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  header h1 { font-size: 20px; }
+  header .total { margin-left: auto; font-size: 14px; opacity: 0.9; }
+  nav {
+    display: flex; gap: 4px; background: var(--card);
+    padding: 8px 16px; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10; overflow-x: auto;
+  }
+  nav button {
+    border: none; background: none; padding: 8px 16px; font-size: 14px;
+    cursor: pointer; border-radius: 8px; color: var(--sub); white-space: nowrap;
+  }
+  nav button.active { background: var(--accent-light); color: var(--accent); font-weight: bold; }
+  main { max-width: 1100px; margin: 0 auto; padding: 20px 16px; }
+  .tab { display: none; }
+  .tab.active { display: block; }
+
+  /* ダッシュボード */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+  .clan-card {
+    background: var(--card); border-radius: 12px; padding: 16px;
+    border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .clan-card .head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+  .clan-card .name { font-weight: bold; font-size: 16px; }
+  .clan-card .coins { margin-left: auto; font-size: 22px; font-weight: bold; color: var(--coin); }
+  .clan-card .coins::before { content: "🪙 "; font-size: 16px; }
+  .item-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px dashed var(--border); font-size: 13px; }
+  .item-row .iname { flex: 0 0 auto; min-width: 90px; }
+  .bar { flex: 1; height: 8px; background: #f0f1f5; border-radius: 4px; overflow: hidden; }
+  .bar > div { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.3s; }
+  .bar.full > div { background: var(--ok); }
+  .item-row .cost { color: var(--sub); font-size: 12px; min-width: 80px; text-align: right; }
+  .btn-exchange {
+    border: none; background: var(--ok); color: #fff; border-radius: 6px;
+    padding: 4px 10px; font-size: 12px; cursor: pointer; font-weight: bold;
+  }
+  .btn-exchange:hover { opacity: 0.85; }
+  .badge-wait { color: var(--sub); font-size: 12px; padding: 4px 6px; }
+  .exchanged-count { color: var(--sub); font-size: 11px; }
+
+  /* 概要テーブル */
+  .summary-table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; margin-bottom: 20px; font-size: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .summary-table th, .summary-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  .summary-table th { background: #f9fafb; color: var(--sub); font-size: 12px; }
+  .summary-table td.num { text-align: right; font-weight: bold; color: var(--coin); }
+  .chip { display: inline-block; background: var(--ok-light); color: var(--ok); border-radius: 999px; padding: 2px 10px; font-size: 12px; margin: 2px; font-weight: bold; }
+  .chip.none { background: #f3f4f6; color: var(--sub); font-weight: normal; }
+
+  /* フォーム共通 */
+  .panel { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); margin-bottom: 16px; }
+  .panel h2 { font-size: 16px; margin-bottom: 14px; }
+  label { font-size: 13px; color: var(--sub); display: block; margin-bottom: 4px; }
+  input[type="date"], input[type="number"], input[type="text"], select {
+    padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: #fff;
+  }
+  input[type="number"] { width: 110px; }
+  .form-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
+  .btn {
+    border: none; background: var(--accent); color: #fff; border-radius: 8px;
+    padding: 9px 18px; font-size: 14px; cursor: pointer; font-weight: bold;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn.gray { background: #6b7280; }
+  .btn.red { background: var(--danger); }
+  .btn.small { padding: 5px 10px; font-size: 12px; }
+  .clan-checks { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .clan-checks label {
+    display: flex; align-items: center; gap: 4px; background: #f9fafb;
+    border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px;
+    font-size: 13px; color: var(--text); cursor: pointer; margin: 0;
+  }
+  .clan-checks label.checked { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+  .check-actions { display: flex; gap: 8px; margin-bottom: 10px; }
+  .link-btn { background: none; border: none; color: var(--accent); font-size: 12px; cursor: pointer; text-decoration: underline; }
+
+  /* 履歴 */
+  .log-table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 13px; border-radius: 12px; overflow: hidden; }
+  .log-table th, .log-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+  .log-table th { background: #f9fafb; color: var(--sub); font-size: 12px; }
+  .delta-plus { color: var(--ok); font-weight: bold; }
+  .delta-minus { color: var(--danger); font-weight: bold; }
+
+  /* 設定 */
+  .setting-list { display: flex; flex-direction: column; gap: 8px; }
+  .setting-list .row { display: flex; gap: 8px; align-items: center; }
+  .setting-list input[type="text"] { flex: 1; max-width: 260px; }
+
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #1f2937; color: #fff; padding: 10px 20px; border-radius: 8px;
+    font-size: 14px; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100;
+  }
+  .toast.show { opacity: 1; }
+  .muted { color: var(--sub); font-size: 12px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🪙 クランコイン管理ツール</h1>
+  <span class="total" id="headerInfo"></span>
+</header>
+
+<nav>
+  <button data-tab="dashboard" class="active">📊 ダッシュボード</button>
+  <button data-tab="record">✏️ コイン記録</button>
+  <button data-tab="history">📜 履歴</button>
+  <button data-tab="settings">⚙️ 設定</button>
+</nav>
+
+<main>
+  <!-- ダッシュボード -->
+  <section id="tab-dashboard" class="tab active">
+    <table class="summary-table">
+      <thead>
+        <tr><th>クラン</th><th style="text-align:right">所持コイン</th><th>交換可能なアイテム</th></tr>
+      </thead>
+      <tbody id="summaryBody"></tbody>
+    </table>
+    <div class="grid" id="clanGrid"></div>
+  </section>
+
+  <!-- 記録 -->
+  <section id="tab-record" class="tab">
+    <div class="panel">
+      <h2>デイリータスクのコインを記録</h2>
+      <div class="form-row">
+        <div><label>日付</label><input type="date" id="recDate"></div>
+        <div><label>獲得コイン数</label><input type="number" id="recAmount" value="10" min="1"></div>
+        <div><label>メモ(任意)</label><input type="text" id="recNote" placeholder="デイリータスク" style="width:200px"></div>
+      </div>
+      <label>対象クラン</label>
+      <div class="check-actions">
+        <button class="link-btn" onclick="setAllChecks(true)">すべて選択</button>
+        <button class="link-btn" onclick="setAllChecks(false)">すべて解除</button>
+      </div>
+      <div class="clan-checks" id="recClanChecks"></div>
+      <button class="btn" onclick="addRecord()">✔ 記録する</button>
+      <p class="muted" style="margin-top:10px">※ 同じタスクを全クランで行う場合は「すべて選択」のまま記録すると一括で加算されます。</p>
+    </div>
+    <div class="panel">
+      <h2>個別調整(手動でコインを増減)</h2>
+      <div class="form-row">
+        <div><label>クラン</label><select id="adjClan"></select></div>
+        <div><label>増減(マイナス可)</label><input type="number" id="adjAmount" value="0"></div>
+        <div><label>メモ</label><input type="text" id="adjNote" placeholder="調整理由" style="width:200px"></div>
+        <button class="btn gray" onclick="addAdjust()">調整を記録</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 履歴 -->
+  <section id="tab-history" class="tab">
+    <div class="panel">
+      <div class="form-row" style="margin-bottom:0">
+        <div><label>クランで絞り込み</label><select id="histFilter" onchange="renderHistory()"><option value="">すべて</option></select></div>
+      </div>
+    </div>
+    <table class="log-table">
+      <thead><tr><th>日付</th><th>クラン</th><th>種別</th><th>増減</th><th>メモ</th><th></th></tr></thead>
+      <tbody id="histBody"></tbody>
+    </table>
+  </section>
+
+  <!-- 設定 -->
+  <section id="tab-settings" class="tab">
+    <div class="panel">
+      <h2>クラン名の編集</h2>
+      <div class="setting-list" id="clanSettings"></div>
+    </div>
+    <div class="panel">
+      <h2>交換アイテムの設定</h2>
+      <p class="muted" style="margin-bottom:10px">アイテム名と必要コイン数を設定します。所持コインが必要数以上になると交換可能と表示されます。</p>
+      <div class="setting-list" id="itemSettings"></div>
+      <div style="margin-top:12px">
+        <button class="btn small" onclick="addItem()">＋ アイテムを追加</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>データ管理</h2>
+      <div class="form-row" style="margin-bottom:0">
+        <button class="btn gray" onclick="exportData()">📤 バックアップ(JSON出力)</button>
+        <button class="btn gray" onclick="document.getElementById('importFile').click()">📥 読み込み(JSON)</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+        <button class="btn red" onclick="resetData()">🗑 全データ初期化</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = "clanCoinTracker_v1";
+
+function defaultState() {
+  return {
+    clans: Array.from({length: 10}, (_, i) => ({ id: "c" + (i + 1), name: "クラン" + (i + 1) })),
+    items: [
+      { id: "i1", name: "アイテムA", cost: 100 },
+      { id: "i2", name: "アイテムB", cost: 300 },
+      { id: "i3", name: "アイテムC", cost: 500 },
+    ],
+    logs: [] // { date, clanId, delta, type: task|exchange|adjust, note }
+  };
+}
+
+let state = load();
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) { console.error(e); }
+  return defaultState();
+}
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+function balance(clanId) {
+  return state.logs.filter(l => l.clanId === clanId).reduce((s, l) => s + l.delta, 0);
+}
+function exchangedCount(clanId, itemId) {
+  return state.logs.filter(l => l.clanId === clanId && l.type === "exchange" && l.itemId === itemId).length;
+}
+function clanName(id) { const c = state.clans.find(c => c.id === id); return c ? c.name : id; }
+function today() { return new Date().toISOString().slice(0, 10); }
+
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+/* ---------- タブ ---------- */
+document.querySelectorAll("nav button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+  });
+});
+
+/* ---------- ダッシュボード ---------- */
+function renderDashboard() {
+  const items = [...state.items].sort((a, b) => a.cost - b.cost);
+
+  // 概要テーブル
+  const sb = document.getElementById("summaryBody");
+  sb.innerHTML = state.clans.map(c => {
+    const bal = balance(c.id);
+    const ex = items.filter(it => bal >= it.cost);
+    const chips = ex.length
+      ? ex.map(it => `<span class="chip">✔ ${esc(it.name)}</span>`).join("")
+      : `<span class="chip none">なし</span>`;
+    return `<tr><td>${esc(c.name)}</td><td class="num">${bal.toLocaleString()}</td><td>${chips}</td></tr>`;
+  }).join("");
+
+  // クランカード
+  const grid = document.getElementById("clanGrid");
+  grid.innerHTML = state.clans.map(c => {
+    const bal = balance(c.id);
+    const rows = items.map(it => {
+      const pct = Math.min(100, Math.round(bal / it.cost * 100));
+      const can = bal >= it.cost;
+      const cnt = exchangedCount(c.id, it.id);
+      const action = can
+        ? `<button class="btn-exchange" onclick="exchange('${c.id}','${it.id}')">交換</button>`
+        : `<span class="badge-wait">あと${(it.cost - bal).toLocaleString()}</span>`;
+      return `
+        <div class="item-row">
+          <span class="iname">${esc(it.name)}${cnt ? ` <span class="exchanged-count">×${cnt}交換済</span>` : ""}</span>
+          <div class="bar ${can ? "full" : ""}"><div style="width:${pct}%"></div></div>
+          <span class="cost">${bal.toLocaleString()}/${it.cost.toLocaleString()}</span>
+          ${action}
+        </div>`;
+    }).join("");
+    return `
+      <div class="clan-card">
+        <div class="head"><span class="name">${esc(c.name)}</span><span class="coins">${bal.toLocaleString()}</span></div>
+        ${rows}
+      </div>`;
+  }).join("");
+
+  const totalCoins = state.clans.reduce((s, c) => s + balance(c.id), 0);
+  document.getElementById("headerInfo").textContent =
+    `全${state.clans.length}クラン 合計 ${totalCoins.toLocaleString()} コイン`;
+}
+
+function exchange(clanId, itemId) {
+  const it = state.items.find(i => i.id === itemId);
+  if (!it) return;
+  if (!confirm(`${clanName(clanId)} のコイン ${it.cost.toLocaleString()} を消費して「${it.name}」と交換しますか?`)) return;
+  state.logs.push({ date: today(), clanId, delta: -it.cost, type: "exchange", itemId, note: it.name + " と交換" });
+  save(); renderAll();
+  toast(`${clanName(clanId)}: ${it.name} と交換しました`);
+}
+
+/* ---------- 記録 ---------- */
+function renderRecordForm() {
+  const wrap = document.getElementById("recClanChecks");
+  wrap.innerHTML = state.clans.map(c => `
+    <label class="checked"><input type="checkbox" value="${c.id}" checked onchange="this.parentElement.classList.toggle('checked', this.checked)"> ${esc(c.name)}</label>
+  `).join("");
+
+  const sel = document.getElementById("adjClan");
+  sel.innerHTML = state.clans.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+}
+
+function setAllChecks(on) {
+  document.querySelectorAll("#recClanChecks input").forEach(cb => {
+    cb.checked = on;
+    cb.parentElement.classList.toggle("checked", on);
+  });
+}
+
+function addRecord() {
+  const date = document.getElementById("recDate").value || today();
+  const amount = parseInt(document.getElementById("recAmount").value, 10);
+  const note = document.getElementById("recNote").value.trim() || "デイリータスク";
+  const targets = [...document.querySelectorAll("#recClanChecks input:checked")].map(cb => cb.value);
+  if (!amount || amount <= 0) { toast("獲得コイン数を1以上で入力してください"); return; }
+  if (!targets.length) { toast("対象クランを選択してください"); return; }
+  targets.forEach(clanId => state.logs.push({ date, clanId, delta: amount, type: "task", note }));
+  save(); renderAll();
+  toast(`${targets.length}クランに +${amount.toLocaleString()} コインを記録しました`);
+}
+
+function addAdjust() {
+  const clanId = document.getElementById("adjClan").value;
+  const amount = parseInt(document.getElementById("adjAmount").value, 10);
+  const note = document.getElementById("adjNote").value.trim() || "手動調整";
+  if (!amount) { toast("増減を入力してください(0以外)"); return; }
+  state.logs.push({ date: today(), clanId, delta: amount, type: "adjust", note });
+  save(); renderAll();
+  toast(`${clanName(clanId)}: ${amount > 0 ? "+" : ""}${amount.toLocaleString()} を記録しました`);
+}
+
+/* ---------- 履歴 ---------- */
+const TYPE_LABEL = { task: "タスク", exchange: "交換", adjust: "調整" };
+
+function renderHistory() {
+  const filter = document.getElementById("histFilter").value;
+  const body = document.getElementById("histBody");
+  const logs = state.logs
+    .map((l, idx) => ({ ...l, idx }))
+    .filter(l => !filter || l.clanId === filter)
+    .sort((a, b) => b.date.localeCompare(a.date) || b.idx - a.idx);
+  body.innerHTML = logs.length ? logs.map(l => `
+    <tr>
+      <td>${l.date}</td>
+      <td>${esc(clanName(l.clanId))}</td>
+      <td>${TYPE_LABEL[l.type] || l.type}</td>
+      <td class="${l.delta >= 0 ? "delta-plus" : "delta-minus"}">${l.delta >= 0 ? "+" : ""}${l.delta.toLocaleString()}</td>
+      <td>${esc(l.note || "")}</td>
+      <td><button class="btn red small" onclick="deleteLog(${l.idx})">取消</button></td>
+    </tr>`).join("")
+    : `<tr><td colspan="6" style="text-align:center;color:var(--sub)">記録がありません</td></tr>`;
+}
+
+function renderHistFilter() {
+  const sel = document.getElementById("histFilter");
+  const cur = sel.value;
+  sel.innerHTML = `<option value="">すべて</option>` +
+    state.clans.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+  sel.value = cur;
+}
+
+function deleteLog(idx) {
+  const l = state.logs[idx];
+  if (!l) return;
+  if (!confirm(`この記録を取り消しますか?\n${l.date} ${clanName(l.clanId)} ${l.delta > 0 ? "+" : ""}${l.delta} (${l.note || ""})`)) return;
+  state.logs.splice(idx, 1);
+  save(); renderAll();
+  toast("記録を取り消しました");
+}
+
+/* ---------- 設定 ---------- */
+function renderSettings() {
+  const cs = document.getElementById("clanSettings");
+  cs.innerHTML = state.clans.map((c, i) => `
+    <div class="row">
+      <span class="muted" style="width:24px">${i + 1}.</span>
+      <input type="text" value="${esc(c.name)}" onchange="renameClan('${c.id}', this.value)">
+    </div>`).join("");
+
+  const is = document.getElementById("itemSettings");
+  is.innerHTML = state.items.map(it => `
+    <div class="row">
+      <input type="text" value="${esc(it.name)}" onchange="updateItem('${it.id}','name',this.value)">
+      <input type="number" value="${it.cost}" min="1" onchange="updateItem('${it.id}','cost',this.value)">
+      <span class="muted">コイン</span>
+      <button class="btn red small" onclick="removeItem('${it.id}')">削除</button>
+    </div>`).join("");
+}
+
+function renameClan(id, name) {
+  const c = state.clans.find(c => c.id === id);
+  if (c && name.trim()) { c.name = name.trim(); save(); renderAll(); }
+}
+function updateItem(id, key, val) {
+  const it = state.items.find(i => i.id === id);
+  if (!it) return;
+  if (key === "cost") { const n = parseInt(val, 10); if (n > 0) it.cost = n; }
+  else if (val.trim()) it.name = val.trim();
+  save(); renderAll();
+}
+function addItem() {
+  const id = "i" + (Date.now());
+  state.items.push({ id, name: "新アイテム", cost: 100 });
+  save(); renderAll();
+}
+function removeItem(id) {
+  const it = state.items.find(i => i.id === id);
+  if (!it) return;
+  if (!confirm(`アイテム「${it.name}」を削除しますか?(交換履歴は残ります)`)) return;
+  state.items = state.items.filter(i => i.id !== id);
+  save(); renderAll();
+}
+
+/* ---------- データ管理 ---------- */
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `clan-coins-${today()}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast("バックアップを出力しました");
+}
+function importData(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!data.clans || !data.items || !data.logs) throw new Error("形式が違います");
+      state = data;
+      save(); renderAll();
+      toast("データを読み込みました");
+    } catch (e) { alert("読み込みに失敗しました: " + e.message); }
+  };
+  reader.readAsText(file);
+  ev.target.value = "";
+}
+function resetData() {
+  if (!confirm("すべてのデータを初期化します。よろしいですか?")) return;
+  if (!confirm("本当に初期化しますか?この操作は取り消せません。")) return;
+  state = defaultState();
+  save(); renderAll();
+  toast("初期化しました");
+}
+
+/* ---------- 共通 ---------- */
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+}
+
+function renderAll() {
+  renderDashboard();
+  renderRecordForm();
+  renderHistFilter();
+  renderHistory();
+  renderSettings();
+}
+
+document.getElementById("recDate").value = today();
+renderAll();
+
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  navigator.serviceWorker.register("sw.js");
+}
+</script>
+</body>
+</html>
