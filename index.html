@@ -93,6 +93,7 @@
   /* クランカード(コンパクト横並び・10クランが1画面に収まる) */
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 5px; }
   .clan-card {
+    position: relative; overflow: hidden;
     display: flex; align-items: center; gap: 9px;
     border: 1px solid transparent;
     border-radius: 14px; padding: 6px 9px;
@@ -109,6 +110,20 @@
       0 5px 14px rgba(0,0,0,0.3),
       0 0 14px color-mix(in srgb, var(--accent, var(--gold)) 16%, transparent);
   }
+  /* カード全面のアイコン背景 + 可読性を保つ暗色スクリム */
+  .cbg {
+    position: absolute; inset: 0; z-index: 0;
+    background-size: cover; background-position: center 38%;
+  }
+  .cbg::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg,
+      rgba(13,15,20,0.94) 0%,
+      rgba(13,15,20,0.86) 30%,
+      rgba(13,15,20,0.62) 58%,
+      rgba(13,15,20,0.38) 100%);
+  }
+  .clan-card > .avatar, .clan-card > .cinfo, .clan-card > .xrow { position: relative; z-index: 1; }
   /* 発光リング付きアバター */
   .avatar {
     width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
@@ -142,25 +157,29 @@
   .cinfo .name {
     font-weight: 700; font-size: 12.5px; letter-spacing: 0.01em; color: #fff;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+    text-shadow: 0 1px 3px rgba(0,0,0,1), 0 0 8px rgba(0,0,0,0.8);
   }
-  .cinfo .coins { font-size: 12.5px; font-weight: 700; color: var(--gold); white-space: nowrap; }
+  .cinfo .coins {
+    font-size: 12.5px; font-weight: 700; color: var(--gold); white-space: nowrap;
+    text-shadow: 0 1px 3px rgba(0,0,0,1), 0 0 8px rgba(0,0,0,0.8);
+  }
   .cinfo .coins::before { content: "🪙"; font-size: 10px; margin-right: 3px; }
 
   /* 交換ボタン(常時表示・進捗を背景で表現) */
   .xrow { display: flex; gap: 6px; flex: 1; min-width: 0; }
   .xbtn {
     flex: 1; position: relative; border-radius: 10px; padding: 5px 3px 4px;
-    border: 1px solid var(--border); cursor: default; min-width: 0;
-    background: linear-gradient(90deg, rgba(230,194,110,0.16) var(--p, 0%), rgba(255,255,255,0.03) var(--p, 0%));
+    border: 1px solid rgba(255,255,255,0.13); cursor: default; min-width: 0;
+    background: linear-gradient(90deg, rgba(230,194,110,0.3) var(--p, 0%), rgba(13,15,20,0.62) var(--p, 0%));
     background: linear-gradient(90deg,
-      color-mix(in srgb, var(--accent, var(--gold)) 22%, transparent) var(--p, 0%),
-      rgba(255,255,255,0.03) var(--p, 0%));
+      color-mix(in srgb, var(--accent, var(--gold)) 38%, rgba(13,15,20,0.72)) var(--p, 0%),
+      rgba(13,15,20,0.62) var(--p, 0%));
+    -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
     display: flex; flex-direction: column; align-items: center; gap: 1px;
     font-family: inherit;
   }
-  .xbtn .xname { font-weight: 700; font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; max-width: 100%; }
-  .xbtn .xsub { font-size: 9.5px; color: var(--sub); white-space: nowrap; }
+  .xbtn .xname { font-weight: 700; font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; max-width: 100%; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+  .xbtn .xsub { font-size: 9.5px; color: #c3c9d6; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
   .xbtn .xcnt {
     position: absolute; top: -6px; right: -3px;
     background: var(--card2); border: 1px solid var(--border);
@@ -488,6 +507,7 @@ function renderDashboard() {
     const accent = CLAN_ACCENTS[c.id] ? `style="--accent:${CLAN_ACCENTS[c.id]}"` : "";
     return `
       <div class="clan-card ${anyReady ? "ready" : ""}" ${accent}>
+        <div class="cbg" style="background-image:url('icons/${c.id}-bg.jpg')"></div>
         <span class="avatar" data-initial="${esc(c.name.charAt(0))}"><img src="icons/${c.id}.jpg" alt="" onerror="this.parentElement.classList.add('noimg')"></span>
         <div class="cinfo">
           <span class="name">${esc(c.name)}</span>
