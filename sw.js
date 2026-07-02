@@ -1,11 +1,16 @@
-const CACHE = "clan-coin-v4";
+const CACHE = "clan-coin-v5";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
-  "./apple-touch-icon.png"
+  "./apple-touch-icon.png",
+  "./icons/c1.jpg",
+  "./icons/c2.jpg",
+  "./icons/c3.jpg",
+  "./icons/c4.jpg",
+  "./icons/c5.jpg"
 ];
 
 self.addEventListener("install", (e) => {
