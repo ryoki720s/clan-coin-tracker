@@ -39,16 +39,17 @@
 
   /* ヘッダー(iPhoneのセンサーバーを避けるセーフエリア対応) */
   header {
-    padding: calc(14px + env(safe-area-inset-top)) 18px 10px;
+    padding: calc(12px + env(safe-area-inset-top)) 18px 8px;
     display: flex; align-items: center; gap: 10px;
   }
+  .brand-wrap { display: flex; flex-direction: column; gap: 1px; margin-right: auto; }
   header .brand {
     font-size: 19px; font-weight: 700; letter-spacing: 0.08em;
-    margin-right: auto;
     background: var(--gold-grad);
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent;
   }
+  .clan-count { font-size: 10.5px; color: var(--sub); letter-spacing: 0.22em; padding-left: 2px; }
   /* デイリー一括ボタン(ヘッダー右上のピル型) */
   .daily-pill {
     border: none; cursor: pointer; font-family: inherit;
@@ -95,7 +96,7 @@
   .clan-card {
     position: relative; overflow: hidden;
     display: flex; flex-direction: column; justify-content: space-between;
-    height: 82px; padding: 6px 9px;
+    height: 119px; padding: 8px 10px;
     border: 1px solid transparent;
     border-radius: 16px;
     background:
@@ -114,22 +115,21 @@
   /* カード全面のキャラ背景 + 上下だけ暗くして中央の顔を見せるスクリム */
   .cbg {
     position: absolute; inset: 0; z-index: 0;
-    background-size: cover; background-position: center 33%;
+    background-size: cover; background-position: center 42%;
   }
   .cbg::after {
     content: ""; position: absolute; inset: 0;
     background:
       linear-gradient(180deg,
-        rgba(10,12,17,0.45) 0%,
-        rgba(10,12,17,0.10) 20%,
-        transparent 42%,
-        transparent 52%,
-        rgba(10,12,17,0.62) 78%,
-        rgba(10,12,17,0.92) 100%),
+        rgba(10,12,17,0.50) 0%,
+        rgba(10,12,17,0.12) 18%,
+        transparent 34%,
+        transparent 60%,
+        rgba(10,12,17,0.42) 80%,
+        rgba(10,12,17,0.72) 100%),
       linear-gradient(90deg,
-        rgba(10,12,17,0.42) 0%,
-        rgba(10,12,17,0.08) 30%,
-        transparent 50%);
+        rgba(10,12,17,0.30) 0%,
+        transparent 26%);
   }
   .clan-card > .ctop, .clan-card > .xrow { position: relative; z-index: 1; }
 
@@ -172,14 +172,14 @@
   }
   .cinfo .coins::before { content: "\1FA99"; font-size: 11px; margin-right: 3px; }
 
-  /* 下段: 交換ボタン(常時表示・進捗を背景で表現) */
-  .xrow { display: flex; gap: 6px; }
+  /* 下段: 交換ボタン(左右端に寄せて中央のキャラを見せる) */
+  .xrow { display: flex; justify-content: space-between; }
   .xbtn {
-    flex: 1; position: relative; border-radius: 9px; padding: 5px 4px 4px;
-    border: 1px solid rgba(255,255,255,0.15); cursor: default; min-width: 0;
+    flex: 0 0 44%; max-width: 165px; position: relative; border-radius: 10px; padding: 4px 4px 3px;
+    border: 1px solid rgba(255,255,255,0.14); cursor: default; min-width: 0;
     background: linear-gradient(90deg,
-      color-mix(in srgb, var(--accent, var(--gold)) 42%, rgba(10,12,17,0.78)) var(--p, 0%),
-      rgba(10,12,17,0.70) var(--p, 0%));
+      color-mix(in srgb, var(--accent, var(--gold)) 38%, rgba(10,12,17,0.55)) var(--p, 0%),
+      rgba(10,12,17,0.48) var(--p, 0%));
     -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
     font-family: inherit;
@@ -297,7 +297,10 @@
 <body>
 
 <header>
-  <span class="brand">🪙 クランコイン</span>
+  <div class="brand-wrap">
+    <span class="brand">🪙 クランコイン</span>
+    <span class="clan-count" id="clanCount">全10クラン</span>
+  </div>
   <button class="daily-pill" id="dailyBtn" onclick="recordDaily()">☀️ デイリー +21</button>
 </header>
 
@@ -480,7 +483,8 @@ function renderDashboard() {
   const items = [...state.items].sort((a, b) => a.cost - b.cost);
   const daily = state.settings.dailyAmount;
 
-  // デイリーボタン(ヘッダー)
+  // ヘッダー(クラン数 + デイリーボタン)
+  document.getElementById("clanCount").textContent = `全${state.clans.length}クラン`;
   const todayDone = state.logs.some(l => l.date === today() && l.type === "task" && l.note === "デイリータスク");
   const dailyBtn = document.getElementById("dailyBtn");
   dailyBtn.textContent = todayDone ? "✔ デイリー記録済" : `☀️ デイリー +${daily}`;
@@ -516,7 +520,6 @@ function renderDashboard() {
       <div class="clan-card ${anyReady ? "ready" : ""}" ${accent}>
         <div class="cbg" style="background-image:url('icons/${c.id}-bg.jpg')"></div>
         <div class="ctop">
-          <span class="avatar" data-initial="${esc(c.name.charAt(0))}"><img src="icons/${c.id}.jpg" alt="" onerror="this.parentElement.classList.add('noimg')"></span>
           <div class="cinfo">
             <span class="name">${esc(c.name)}</span>
             <span class="coins">${bal.toLocaleString()}</span>
