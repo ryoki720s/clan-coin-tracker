@@ -184,8 +184,18 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
     font-family: inherit;
   }
+  .xbtn { min-height: 52px; }
   .xbtn .xname { font-weight: 700; font-size: 11px; color: #fff; white-space: nowrap; overflow: hidden; max-width: 100%; text-shadow: 0 1px 2px rgba(0,0,0,0.9); }
   .xbtn .xsub { font-size: 9.5px; color: #cfd5e2; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.9); }
+  .xbtn .xsub2 { font-size: 9px; color: #aab1c2; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.9); }
+  /* 今週の交換上限に到達: 琥珀色で明示 */
+  .xbtn.capped {
+    border: 1px solid rgba(255,184,92,0.5);
+    background: linear-gradient(150deg, rgba(84,54,12,0.72), rgba(48,30,8,0.72));
+  }
+  .xbtn.capped .xname { color: #ffd9a0; }
+  .xbtn.capped .xsub { color: #ffb85c; font-weight: 700; }
+  .xbtn.capped .xsub2 { color: #d9a565; }
   /* 交換可能: 青系のはっきりしたボタン */
   .xbtn.ready {
     border: 1px solid rgba(255,255,255,0.45); cursor: pointer;
@@ -198,6 +208,7 @@
   .xbtn.ready:active { transform: scale(0.97); }
   .xbtn.ready .xname { color: #fff; text-shadow: 0 1px 2px rgba(0,20,60,0.5); }
   .xbtn.ready .xsub { color: rgba(255,255,255,0.9); font-weight: 700; text-shadow: 0 1px 2px rgba(0,20,60,0.5); }
+  .xbtn.ready .xsub2 { color: rgba(255,255,255,0.78); text-shadow: 0 1px 2px rgba(0,20,60,0.5); }
 
   /* フォーム共通 */
   .panel {
@@ -362,7 +373,7 @@
     </div>
     <div class="panel">
       <h2>交換アイテムの設定</h2>
-      <p class="muted" style="margin-bottom:10px">アイテム名と必要コイン数。所持コインが必要数以上になると交換可能と表示されます。</p>
+      <p class="muted" style="margin-bottom:10px">アイテム名・必要コイン数・週の交換上限(月曜0:00リセット、空欄で無制限)。所持コインが必要数以上になると交換可能と表示されます。</p>
       <div class="setting-list" id="itemSettings"></div>
       <div style="margin-top:12px">
         <button class="btn small" onclick="addItem()">＋ アイテムを追加</button>
@@ -413,6 +424,10 @@ function defaultState() {
 }
 function normalize(s) {
   s.settings = Object.assign({ dailyAmount: 21 }, s.settings || {});
+  (s.items || []).forEach(it => {
+    // 週の交換上限(初期値: 初級系のみ2枚/週、他は無制限)
+    if (it.weeklyLimit === undefined) it.weeklyLimit = (it.name || "").includes("初級") ? 2 : null;
+  });
   return s;
 }
 
@@ -431,7 +446,22 @@ function balance(clanId) {
   return state.logs.filter(l => l.clanId === clanId).reduce((s, l) => s + l.delta, 0);
 }
 function clanName(id) { const c = state.clans.find(c => c.id === id); return c ? c.name : id; }
-function today() { return new Date().toISOString().slice(0, 10); }
+function localISO(d) {
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+function today() { return localISO(new Date()); }
+function weekStart() {
+  // 今週の月曜日(週の交換上限は月曜AM0:00にリセット)
+  const d = new Date();
+  d.setDate(d.getDate() - (d.getDay() + 6) % 7);
+  return localISO(d);
+}
+function exchangedThisWeek(clanId, itemId) {
+  const ws = weekStart();
+  return state.logs.filter(l =>
+    l.type === "exchange" && l.clanId === clanId && l.itemId === itemId && l.date >= ws
+  ).length;
+}
 function daysUntil(bal, cost) {
   if (bal >= cost) return 0;
   return Math.ceil((cost - bal) / Math.max(1, state.settings.dailyAmount));
@@ -487,16 +517,39 @@ function renderDashboard() {
     const bal = balance(c.id);
     const anyReady = items.some(it => bal >= it.cost);
     const btns = items.map(it => {
-      const can = bal >= it.cost;
       const pct = Math.min(100, Math.round(bal / it.cost * 100));
-      if (can) {
-        const n = Math.floor(bal / it.cost);
+      const limit = it.weeklyLimit || null;
+      const used = limit ? exchangedThisWeek(c.id, it.id) : 0;
+      const remaining = limit ? Math.max(0, limit - used) : Infinity;
+      const nAff = Math.floor(bal / it.cost);   // コイン的に交換できる枚数
+      const nNow = Math.min(nAff, remaining);   // 今週の上限も考慮した枚数
+
+      // 今週の上限に到達(コインはあるのに交換できない)
+      if (limit && nAff >= 1 && remaining === 0) {
+        return `
+          <button class="xbtn capped" disabled>
+            <span class="xname">${esc(it.name)}</span>
+            <span class="xsub">今週の上限 ${used}/${limit}枚 交換済</span>
+            <span class="xsub2">月曜 0:00 にリセット</span>
+          </button>`;
+      }
+
+      if (nNow >= 1) {
+        let second;
+        if (nAff >= remaining && remaining !== Infinity) {
+          second = `今週はあと${remaining}枚まで`;
+        } else {
+          const d = Math.ceil((it.cost * (nAff + 1) - bal) / Math.max(1, daily));
+          second = `${nAff + 1}枚目まで あと約${d}日`;
+        }
         return `
           <button class="xbtn ready" onclick="exchange('${c.id}','${it.id}')">
             <span class="xname">${esc(it.name)}</span>
-            <span class="xsub">${n}枚交換可</span>
+            <span class="xsub">${nNow}枚交換可</span>
+            <span class="xsub2">${second}</span>
           </button>`;
       }
+
       return `
         <button class="xbtn" disabled style="--p:${pct}%">
           <span class="xname">${esc(it.name)}</span>
@@ -530,6 +583,10 @@ function recordDaily() {
 function exchange(clanId, itemId) {
   const it = state.items.find(i => i.id === itemId);
   if (!it) return;
+  if (it.weeklyLimit && exchangedThisWeek(clanId, itemId) >= it.weeklyLimit) {
+    toast(`${it.name}は今週の上限(${it.weeklyLimit}枚)に達しています。月曜0:00にリセットされます`);
+    return;
+  }
   state.logs.push({ date: today(), clanId, delta: -it.cost, type: "exchange", itemId, note: it.name + " と交換" });
   save(); renderAll();
   toast(`${clanName(clanId)}: ${it.name} と交換しました(取り消しは履歴から)`);
@@ -632,8 +689,10 @@ function renderSettings() {
   is.innerHTML = state.items.map(it => `
     <div class="row">
       <input type="text" value="${esc(it.name)}" onchange="updateItem('${it.id}','name',this.value)">
-      <input type="number" value="${it.cost}" min="1" onchange="updateItem('${it.id}','cost',this.value)">
+      <input type="number" value="${it.cost}" min="1" style="width:80px" onchange="updateItem('${it.id}','cost',this.value)">
       <span class="muted">コイン</span>
+      <input type="number" value="${it.weeklyLimit ?? ""}" min="1" placeholder="なし" style="width:64px" onchange="updateItem('${it.id}','weeklyLimit',this.value)">
+      <span class="muted">枚/週</span>
       <button class="btn red small" onclick="removeItem('${it.id}')">削除</button>
     </div>`).join("");
 }
@@ -650,6 +709,7 @@ function updateItem(id, key, val) {
   const it = state.items.find(i => i.id === id);
   if (!it) return;
   if (key === "cost") { const n = parseInt(val, 10); if (n > 0) it.cost = n; }
+  else if (key === "weeklyLimit") { const n = parseInt(val, 10); it.weeklyLimit = n > 0 ? n : null; }
   else if (val.trim()) it.name = val.trim();
   save(); renderAll();
 }
