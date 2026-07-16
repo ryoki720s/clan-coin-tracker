@@ -188,6 +188,7 @@
   .xbtn .xname { font-weight: 700; font-size: 11px; color: #fff; white-space: nowrap; overflow: hidden; max-width: 100%; text-shadow: 0 1px 2px rgba(0,0,0,0.9); }
   .xbtn .xsub { font-size: 9.5px; color: #cfd5e2; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.9); }
   .xbtn .xsub2 { font-size: 9px; color: #aab1c2; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.9); }
+  .xbtn .xsub2.capnote { color: #ffb85c; font-weight: 700; }
   /* 今週の交換上限に到達: 琥珀色で明示 */
   .xbtn.capped {
     border: 1px solid rgba(255,184,92,0.5);
@@ -550,10 +551,16 @@ function renderDashboard() {
           </button>`;
       }
 
+      // コイン不足の通常状態でも、週上限アイテムは今週の残り回数を表示
+      const weekInfo = !limit ? "" :
+        remaining === 0
+          ? `<span class="xsub2 capnote">今週の上限 ${used}/${limit}枚 交換済</span>`
+          : `<span class="xsub2">今週あと${remaining}枚交換できます</span>`;
       return `
         <button class="xbtn" disabled style="--p:${pct}%">
           <span class="xname">${esc(it.name)}</span>
           <span class="xsub">${bal.toLocaleString()}/${it.cost.toLocaleString()} ・ あと約${daysUntil(bal, it.cost)}日</span>
+          ${weekInfo}
         </button>`;
     }).join("");
     const accent = CLAN_ACCENTS[c.id] ? `style="--accent:${CLAN_ACCENTS[c.id]}"` : "";
